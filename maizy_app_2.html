@@ -1045,6 +1045,8 @@
 
     <!-- Login overlay -->
     <div id="loginOverlay" style="display:none;">
+
+        <!-- Sign In -->
         <div id="loginBox">
             <div style="font-size: 48px;">🐶</div>
             <h2>Maizy's Training App</h2>
@@ -1053,7 +1055,35 @@
             <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" />
             <button id="loginBtn">Sign In</button>
             <div id="loginError"></div>
+            <div style="margin-top:14px;">
+                <a id="showForgotBtn" href="#" style="color:#5C6D4C;font-size:13px;text-decoration:underline;cursor:pointer;">Forgot password?</a>
+            </div>
         </div>
+
+        <!-- Forgot Password -->
+        <div id="forgotBox" style="display:none;background:#f5f0e8;border-radius:16px;padding:36px 28px;width:320px;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+            <div style="font-size: 48px;">🔑</div>
+            <h2 style="margin:12px 0 6px;color:#3D4A34;font-size:20px;">Reset Password</h2>
+            <p style="color:#666;font-size:13px;margin:0 0 20px;">Enter your email and we'll send you a reset link</p>
+            <input type="email" id="forgotEmail" placeholder="Email address" autocomplete="email" style="width:100%;padding:12px;margin:6px 0;border:1px solid #ccc;border-radius:8px;font-size:15px;box-sizing:border-box;" />
+            <button id="forgotBtn" style="width:100%;padding:13px;margin-top:10px;background:linear-gradient(135deg,#6B7C5C,#4A5840);color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">Send Reset Link</button>
+            <div id="forgotMsg" style="font-size:13px;margin-top:10px;min-height:18px;"></div>
+            <div style="margin-top:14px;">
+                <a id="showLoginBtn" href="#" style="color:#5C6D4C;font-size:13px;text-decoration:underline;cursor:pointer;">← Back to sign in</a>
+            </div>
+        </div>
+
+        <!-- Set New Password (shown after clicking reset link in email) -->
+        <div id="resetBox" style="display:none;background:#f5f0e8;border-radius:16px;padding:36px 28px;width:320px;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+            <div style="font-size: 48px;">🔒</div>
+            <h2 style="margin:12px 0 6px;color:#3D4A34;font-size:20px;">Set New Password</h2>
+            <p style="color:#666;font-size:13px;margin:0 0 20px;">Choose a new password for your account</p>
+            <input type="password" id="newPassword" placeholder="New password" autocomplete="new-password" style="width:100%;padding:12px;margin:6px 0;border:1px solid #ccc;border-radius:8px;font-size:15px;box-sizing:border-box;" />
+            <input type="password" id="confirmPassword" placeholder="Confirm new password" autocomplete="new-password" style="width:100%;padding:12px;margin:6px 0;border:1px solid #ccc;border-radius:8px;font-size:15px;box-sizing:border-box;" />
+            <button id="setPasswordBtn" style="width:100%;padding:13px;margin-top:10px;background:linear-gradient(135deg,#6B7C5C,#4A5840);color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">Set New Password</button>
+            <div id="resetMsg" style="font-size:13px;margin-top:10px;min-height:18px;"></div>
+        </div>
+
     </div>
 
     <div class="app-container">
@@ -3420,7 +3450,14 @@
 
         // Auth state listener — drives the whole app startup
         db.auth.onAuthStateChange(async function(event, session) {
-            if (session && session.user) {
+            if (event === 'PASSWORD_RECOVERY') {
+                // User clicked reset link in email — show set new password form
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('forgotBox').style.display = 'none';
+                document.getElementById('resetBox').style.display = 'block';
+            } else if (session && session.user) {
                 currentUser = session.user;
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('loadingOverlay').style.display = 'flex';
@@ -3453,6 +3490,62 @@
         // Allow Enter key on password field
         document.getElementById('loginPassword').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') document.getElementById('loginBtn').click();
+        });
+
+        // Toggle between login and forgot password views
+        document.getElementById('showForgotBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('loginBox').style.display = 'none';
+            document.getElementById('forgotBox').style.display = 'block';
+            document.getElementById('forgotEmail').value = document.getElementById('loginEmail').value;
+        });
+        document.getElementById('showLoginBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('forgotBox').style.display = 'none';
+            document.getElementById('loginBox').style.display = 'block';
+        });
+
+        // Send password reset email
+        document.getElementById('forgotBtn').addEventListener('click', async function() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const msgEl = document.getElementById('forgotMsg');
+            if (!email) { msgEl.style.color = '#c0392b'; msgEl.textContent = '❌ Please enter your email address.'; return; }
+            this.textContent = 'Sending...';
+            this.disabled = true;
+            const { error } = await db.auth.resetPasswordForEmail(email, {
+                redirectTo: 'https://ronniehoff1965.github.io/MaizyTrainingApp/maizy_app_2.html'
+            });
+            if (error) {
+                msgEl.style.color = '#c0392b';
+                msgEl.textContent = '❌ ' + error.message;
+            } else {
+                msgEl.style.color = '#3D7A34';
+                msgEl.textContent = '✅ Reset link sent! Check your email.';
+            }
+            this.textContent = 'Send Reset Link';
+            this.disabled = false;
+        });
+
+        // Set new password (after clicking reset link in email)
+        document.getElementById('setPasswordBtn').addEventListener('click', async function() {
+            const newPw = document.getElementById('newPassword').value;
+            const confirmPw = document.getElementById('confirmPassword').value;
+            const msgEl = document.getElementById('resetMsg');
+            if (newPw.length < 6) { msgEl.style.color = '#c0392b'; msgEl.textContent = '❌ Password must be at least 6 characters.'; return; }
+            if (newPw !== confirmPw) { msgEl.style.color = '#c0392b'; msgEl.textContent = '❌ Passwords do not match.'; return; }
+            this.textContent = 'Saving...';
+            this.disabled = true;
+            const { error } = await db.auth.updateUser({ password: newPw });
+            if (error) {
+                msgEl.style.color = '#c0392b';
+                msgEl.textContent = '❌ ' + error.message;
+                this.textContent = 'Set New Password';
+                this.disabled = false;
+            } else {
+                msgEl.style.color = '#3D7A34';
+                msgEl.textContent = '✅ Password updated! Signing you in...';
+                setTimeout(function() { location.reload(); }, 1500);
+            }
         });
 
         // Logout button
