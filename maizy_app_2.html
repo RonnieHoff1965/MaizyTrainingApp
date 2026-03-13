@@ -4,6 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maizy's Complete Training App</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: flex; align-items: center;
+            justify-content: center; z-index: 9999;
+        }
+        #loginBox {
+            background: #f5f0e8; border-radius: 16px; padding: 36px 28px;
+            width: 320px; max-width: 90vw; text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        #loginBox h2 { margin: 12px 0 6px; color: #3D4A34; font-size: 20px; }
+        #loginBox p { color: #666; font-size: 13px; margin: 0 0 20px; }
+        #loginBox input {
+            width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #ccc;
+            border-radius: 8px; font-size: 15px; box-sizing: border-box;
+        }
+        #loginBtn {
+            width: 100%; padding: 13px; margin-top: 10px;
+            background: linear-gradient(135deg, #6B7C5C, #4A5840);
+            color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+        }
+        #loginBtn:hover { background: linear-gradient(135deg, #5C6D4C, #3D4A34); }
+        #loginError { color: #c0392b; font-size: 13px; margin-top: 10px; min-height: 18px; }
+        #logoutBtn {
+            position: absolute; top: 10px; right: 48px;
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+            color: white; padding: 4px 10px; border-radius: 6px;
+            font-size: 12px; cursor: pointer; z-index: 100;
+        }
+        #logoutBtn:hover { background: rgba(255,255,255,0.3); }
+        #loadingOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #7D6E5C; display: flex; align-items: center;
+            justify-content: center; z-index: 9998; color: white; font-size: 18px;
+        }
+    </style>
     <style>
         html, body {
             margin: 0;
@@ -1000,6 +1039,23 @@
         </style>
 </head>
 <body>
+
+    <!-- Loading screen -->
+    <div id="loadingOverlay">🐾 Loading Maizy's Training App...</div>
+
+    <!-- Login overlay -->
+    <div id="loginOverlay" style="display:none;">
+        <div id="loginBox">
+            <div style="font-size: 48px;">🐶</div>
+            <h2>Maizy's Training App</h2>
+            <p>Sign in to access your training schedule</p>
+            <input type="email" id="loginEmail" placeholder="Email address" autocomplete="email" />
+            <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" />
+            <button id="loginBtn">Sign In</button>
+            <div id="loginError"></div>
+        </div>
+    </div>
+
     <div class="app-container">
         <div class="app-header">
             <div class="header-content">
@@ -1240,6 +1296,9 @@
             </div>
         </div>
         
+        <!-- Logout Button -->
+        <button id="logoutBtn" title="Sign out">⎋ Logout</button>
+
         <!-- Fullscreen Button -->
         <button class="fs-btn" id="fsBtn">⛶</button>
         
@@ -1266,6 +1325,12 @@
     <script>
         const STORAGE_KEY = 'maizy_training_v2';
         const BIRTHDAY = new Date('2026-02-13');
+
+        // Supabase setup
+        const SUPABASE_URL = 'https://ayebupzaaibodhvigwez.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5ZWJ1cHphYWlib2Rodmlnd2V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjc3NzYsImV4cCI6MjA4OTAwMzc3Nn0.GsYad_hI7lNpH1a1tb8xI3zlAIjpy_ACvkcRVIavG3c';
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let currentUser = null;
         
         const trainingData = {
     8: {
@@ -2837,30 +2902,46 @@
             { week: 48, text: "FIRST STARTED TEST READY - 12 Months Old", critical: true }
         ];
 
-        function loadData() {
+        async function loadData() {
+            if (currentUser) {
+                try {
+                    const { data, error } = await db
+                        .from('training_data')
+                        .select('data')
+                        .eq('user_id', currentUser.id)
+                        .single();
+                    if (data && data.data) {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.data));
+                        return data.data;
+                    }
+                } catch (e) { console.log('Supabase load failed, using local', e); }
+            }
             try {
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) return JSON.parse(saved);
-            } catch (e) {
-                console.log('Loading fresh data');
-            }
-            return {
-                startDate: new Date().toISOString(),
-                currentWeek: 8,
-                completedWeeks: [],
-                weekData: {}
-            };
+            } catch (e) {}
+            return { startDate: new Date().toISOString(), currentWeek: 8, completedWeeks: [], weekData: {} };
         }
 
         function saveData(data) {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            } catch (e) {
-                console.log('Save failed');
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+            if (currentUser) {
+                db.from('training_data').upsert(
+                    { user_id: currentUser.id, data: data, updated_at: new Date().toISOString() },
+                    { onConflict: 'user_id' }
+                ).catch(function(e) { console.log('Cloud save failed', e); });
             }
         }
 
-        let appData = loadData();
+        let appData = null;
+
+        async function initApp() {
+            appData = await loadData();
+            updateDashboard();
+            initWeekButtons();
+            renderMilestones();
+            renderWeekContent(appData.currentWeek);
+        }
 
         function updateDashboard() {
             const today = new Date();
@@ -3337,11 +3418,48 @@
             });
         });
 
-        updateDashboard();
-        initWeekButtons();
-        renderMilestones();
-        renderWeekContent(appData.currentWeek);
-        
+        // Auth state listener — drives the whole app startup
+        db.auth.onAuthStateChange(async function(event, session) {
+            if (session && session.user) {
+                currentUser = session.user;
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                await initApp();
+                document.getElementById('loadingOverlay').style.display = 'none';
+            } else {
+                currentUser = null;
+                appData = null;
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('loginOverlay').style.display = 'flex';
+            }
+        });
+
+        // Login button
+        document.getElementById('loginBtn').addEventListener('click', async function() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errEl = document.getElementById('loginError');
+            errEl.textContent = '';
+            this.textContent = 'Signing in...';
+            this.disabled = true;
+            const { error } = await db.auth.signInWithPassword({ email: email, password: password });
+            if (error) {
+                errEl.textContent = '❌ ' + error.message;
+                this.textContent = 'Sign In';
+                this.disabled = false;
+            }
+        });
+
+        // Allow Enter key on password field
+        document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') document.getElementById('loginBtn').click();
+        });
+
+        // Logout button
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            await db.auth.signOut();
+        });
+
         // Fullscreen toggle - hides bottom navigation
         document.getElementById('fsBtn').addEventListener('click', function() {
             document.body.classList.toggle('fs-mode');
@@ -3349,9 +3467,12 @@
         });
         
         // Reset button - clear all saved data
-        document.getElementById('resetBtn').addEventListener('click', function() {
+        document.getElementById('resetBtn').addEventListener('click', async function() {
             if (confirm('⚠️ Are you sure you want to reset ALL training data? This will:\n\n• Reset to Week 8\n• Clear all completed weeks\n• Delete all notes\n• Delete all daily logs\n• Remove all progress\n\nThis cannot be undone!')) {
                 localStorage.removeItem(STORAGE_KEY);
+                if (currentUser) {
+                    await db.from('training_data').delete().eq('user_id', currentUser.id);
+                }
                 location.reload();
             }
         });
