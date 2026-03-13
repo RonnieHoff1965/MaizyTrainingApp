@@ -1361,6 +1361,7 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5ZWJ1cHphYWlib2Rodmlnd2V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjc3NzYsImV4cCI6MjA4OTAwMzc3Nn0.GsYad_hI7lNpH1a1tb8xI3zlAIjpy_ACvkcRVIavG3c';
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
+        let recoverySession = null;
         
         const trainingData = {
     8: {
@@ -3451,7 +3452,8 @@
         // Auth state listener — drives the whole app startup
         db.auth.onAuthStateChange(async function(event, session) {
             if (event === 'PASSWORD_RECOVERY') {
-                // User clicked reset link in email — show set new password form
+                // User clicked reset link in email — save session and show set new password form
+                recoverySession = session;
                 document.getElementById('loadingOverlay').style.display = 'none';
                 document.getElementById('loginOverlay').style.display = 'flex';
                 document.getElementById('loginBox').style.display = 'none';
@@ -3535,6 +3537,13 @@
             if (newPw !== confirmPw) { msgEl.style.color = '#c0392b'; msgEl.textContent = '❌ Passwords do not match.'; return; }
             this.textContent = 'Saving...';
             this.disabled = true;
+            // Re-establish the recovery session before updating password
+            if (recoverySession) {
+                await db.auth.setSession({
+                    access_token: recoverySession.access_token,
+                    refresh_token: recoverySession.refresh_token
+                });
+            }
             const { error } = await db.auth.updateUser({ password: newPw });
             if (error) {
                 msgEl.style.color = '#c0392b';
