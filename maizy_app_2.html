@@ -3449,6 +3449,16 @@
             });
         });
 
+        // Safety net: if loading hangs for 8 seconds, force show login screen
+        setTimeout(function() {
+            var loading = document.getElementById('loadingOverlay');
+            var login = document.getElementById('loginOverlay');
+            if (loading && loading.style.display !== 'none' && (!login || login.style.display === 'none')) {
+                loading.style.display = 'none';
+                login.style.display = 'flex';
+            }
+        }, 8000);
+
         // Auth state listener — drives the whole app startup
         db.auth.onAuthStateChange(async function(event, session) {
             if (event === 'PASSWORD_RECOVERY') {
@@ -3463,7 +3473,17 @@
                 currentUser = session.user;
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('loadingOverlay').style.display = 'flex';
-                await initApp();
+                try {
+                    await initApp();
+                } catch(e) {
+                    console.error('initApp failed:', e);
+                    // Fallback: use empty data so app still loads
+                    appData = { startDate: new Date().toISOString(), currentWeek: 8, completedWeeks: [], weekData: {} };
+                    updateDashboard();
+                    initWeekButtons();
+                    renderMilestones();
+                    renderWeekContent(appData.currentWeek);
+                }
                 document.getElementById('loadingOverlay').style.display = 'none';
             } else {
                 currentUser = null;
