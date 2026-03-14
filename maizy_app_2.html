@@ -2936,16 +2936,15 @@
         async function loadData() {
             if (currentUser) {
                 try {
-                    const { data, error } = await db
-                        .from('training_data')
-                        .select('data')
-                        .eq('user_id', currentUser.id)
-                        .single();
+                    // 5 second timeout — if Supabase is slow, fall through to localStorage
+                    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000));
+                    const query = db.from('training_data').select('data').eq('user_id', currentUser.id).single();
+                    const { data, error } = await Promise.race([query, timeout]);
                     if (data && data.data) {
                         localStorage.setItem(STORAGE_KEY, JSON.stringify(data.data));
                         return data.data;
                     }
-                } catch (e) { console.log('Supabase load failed, using local', e); }
+                } catch (e) { console.log('Supabase load failed, using local:', e.message); }
             }
             try {
                 const saved = localStorage.getItem(STORAGE_KEY);
@@ -2965,8 +2964,11 @@
         }
 
         let appData = null;
+        let appInitialized = false;
 
         async function initApp() {
+            if (appInitialized) return;
+            appInitialized = true;
             appData = await loadData();
             updateDashboard();
             initWeekButtons();

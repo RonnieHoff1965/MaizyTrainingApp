@@ -23,7 +23,7 @@ Single-file HTML app (`maizy_app_2.html`) for tracking Maizy's hunting dog train
 
 | Function | Location | Purpose |
 |---|---|---|
-| `loadData()` | ~line 3390 | Async — loads from Supabase, falls back to localStorage |
+| `loadData()` | ~line 3390 | Async — loads from Supabase (5s timeout), falls back to localStorage |
 | `saveData(data)` | ~line 3408 | Sync localStorage + async Supabase upsert (fire-and-forget) |
 | `initApp()` | ~line 3418 | Async — called after auth, loads data and renders all views |
 | `updateDashboard()` | mid-script | Renders header stats, progress gauge, speedometer |
