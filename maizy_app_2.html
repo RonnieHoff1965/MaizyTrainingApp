@@ -3997,8 +3997,16 @@
             const weekData = appData.weekData[week] || { completedGoals: [], notes: '' };
             
             const treatClass = data.treatLevel === 'high' ? 'treat-high' : data.treatLevel === 'none' ? 'treat-none' : 'treat-low';
-            
-            let html = '<div class="training-header"><h2>Week ' + data.week + ' - ' + data.phase + '</h2><div class="training-meta"><span>' + data.age + '</span><span class="treat-badge ' + treatClass + '">' + data.treatText + '</span></div></div>';
+
+            // Get feeding info early so we can show it in the header
+            const feed = getFeedingInfo(week);
+
+            let html = '<div class="training-header"><h2>Week ' + data.week + ' - ' + data.phase + '</h2>'
+                + '<div class="training-meta">'
+                + '<span>' + data.age + '</span>'
+                + '<span class="treat-badge ' + treatClass + '">' + data.treatText + '</span>'
+                + '<span class="treat-badge" style="background:#4a7c59;color:#fff;font-weight:700;">🍖 ' + feed.daily + ' cups/day</span>'
+                + '</div></div>';
             
             if (appData.completedWeeks.indexOf(week) !== -1) {
                 html += '<div class="alert alert-success"><span class="alert-icon">✅</span>Week ' + week + ' completed!</div>';
@@ -4016,15 +4024,14 @@
                 html += '</div>';
             }
 
-            // ── Feeding callout for this week ──────────────────────────────
-            const feed = getFeedingInfo(week);
+            // ── Detailed feeding card ──────────────────────────────────────
             html += '<div class="feed-card">'
-                + '<div class="feed-card-title">🍖 Daily Feeding Guide — ' + feed.age + ' (' + feed.label + ')</div>'
+                + '<div class="feed-card-title">🍖 Daily Food Allotment — Week ' + week + '</div>'
                 + '<div class="feed-row"><span>📦 Total Daily Ration</span><strong>' + feed.daily + ' cups/day</strong></div>'
-                + '<div class="feed-row"><span>🍽️ Meal Food (½ ration)</span><strong>' + feed.mealPortion + ' cup × ' + feed.meals + ' meals/day</strong></div>'
+                + '<div class="feed-row"><span>🍽️ Single Meal (½ ration)</span><strong>' + feed.mealPortion + ' cups — 1×/day</strong></div>'
                 + '<div class="feed-row"><span>🎯 Training Treats (½ ration)</span><strong>' + feed.treatDay + ' cups/day</strong></div>'
-                + '<div class="feed-row"><span>📅 Weekly Treat Budget</span><strong>' + feed.treatWeek + ' cups this week</strong></div>'
-                + '<div style="font-size:11px;color:#7A9B5C;margin-top:8px;">Treats = dry kibble from the daily ration. Always verify with your kibble brand's chart.</div>'
+                + '<div class="feed-row"><span>📅 Weekly Treat Budget</span><strong>' + feed.treatWeek + ' cups</strong></div>'
+                + '<div style="font-size:11px;color:#7A9B5C;margin-top:8px;">Treats = dry kibble pulled from the daily ration. Verify with your kibble brand's chart.</div>'
                 + '</div>';
 
             // Stonnie Dennis Techniques Section
