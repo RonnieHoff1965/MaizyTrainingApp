@@ -1036,6 +1036,126 @@
         .goal-progress-select.sel-25  { border-color:#e67e22; background-color:#feebd8; color:#c05000; }
         .goal-progress-select.sel-0   { border-color:#ccc;    background-color:#f4f4f4; color:#888;   }
 
+
+        /* ── Report Card Modal ── */
+        .rc-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 9999;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .rc-overlay.open { display: flex; justify-content: center; align-items: flex-start; }
+        .rc-card {
+            background: white;
+            border-radius: 16px;
+            max-width: 520px;
+            width: 100%;
+            margin: auto;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            font-family: inherit;
+        }
+        .rc-header {
+            background: linear-gradient(135deg, #4A5840, #6B7C5C);
+            color: white;
+            padding: 20px 24px 16px;
+        }
+        .rc-header h2 { margin: 0 0 4px; font-size: 20px; }
+        .rc-header .rc-subtitle { font-size: 13px; opacity: 0.8; }
+        .rc-grade-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+        .rc-grade {
+            font-size: 52px;
+            font-weight: 900;
+            line-height: 1;
+        }
+        .rc-grade.A  { color: #27ae60; }
+        .rc-grade.B  { color: #2980b9; }
+        .rc-grade.C  { color: #f39c12; }
+        .rc-grade.D  { color: #e67e22; }
+        .rc-grade.F  { color: #e74c3c; }
+        .rc-grade.NA { color: #95a5a6; font-size: 32px; }
+        .rc-stats { text-align: right; font-size: 13px; color: #666; }
+        .rc-stats strong { font-size: 20px; color: #333; display: block; }
+        .rc-section { padding: 14px 24px; border-bottom: 1px solid #eee; }
+        .rc-section h4 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+        .rc-goal { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 7px; font-size: 14px; }
+        .rc-goal .rc-check { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .rc-goal .rc-pct { font-size: 11px; color: #888; margin-left: auto; padding-left: 8px; white-space: nowrap; }
+        .rc-log-item { background: #f8f9fa; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+        .rc-log-date { font-size: 12px; font-weight: bold; color: #5C6D4C; }
+        .rc-log-meta { font-size: 11px; color: #888; margin: 2px 0 4px; }
+        .rc-log-text { font-size: 13px; color: #444; white-space: pre-wrap; }
+        .rc-footer {
+            padding: 16px 24px;
+            display: flex;
+            gap: 10px;
+            background: #f8f9fa;
+        }
+        .rc-btn {
+            flex: 1; padding: 11px; border: none; border-radius: 8px;
+            font-weight: bold; font-size: 14px; cursor: pointer;
+        }
+        .rc-btn-print { background: #5C6D4C; color: white; }
+        .rc-btn-close { background: #dee2e6; color: #333; }
+        .rc-notes { font-size: 13px; color: #444; white-space: pre-wrap; font-style: italic; }
+        .rc-photo { max-width: 100%; border-radius: 8px; margin-top: 6px; }
+        @media print {
+            .rc-overlay { display: block !important; position: static; background: none; padding: 0; }
+            .rc-btn-print, .rc-btn-close { display: none; }
+            .rc-footer { display: none; }
+            body > *:not(.rc-overlay) { display: none; }
+        }
+
+        /* ── 4-Week Grade Cards on Dashboard ── */
+        .grade-blocks { margin-bottom: 20px; }
+        .grade-block {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: box-shadow 0.2s;
+        }
+        .grade-block:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .grade-block.complete-block { border-color: #5C6D4C; background: #f4f8ee; }
+        .grade-block .gb-grade {
+            font-size: 38px;
+            font-weight: 900;
+            min-width: 48px;
+            text-align: center;
+            line-height: 1;
+        }
+        .grade-block .gb-grade.A  { color: #27ae60; }
+        .grade-block .gb-grade.B  { color: #2980b9; }
+        .grade-block .gb-grade.C  { color: #f39c12; }
+        .grade-block .gb-grade.D  { color: #e67e22; }
+        .grade-block .gb-grade.F  { color: #e74c3c; }
+        .grade-block .gb-grade.NA { color: #bdc3c7; font-size: 24px; }
+        .grade-block .gb-info { flex: 1; }
+        .grade-block .gb-title { font-weight: bold; font-size: 15px; color: #333; margin-bottom: 2px; }
+        .grade-block .gb-weeks { font-size: 12px; color: #888; margin-bottom: 4px; }
+        .grade-block .gb-bar-wrap { background: #e9ecef; border-radius: 4px; height: 6px; overflow: hidden; }
+        .grade-block .gb-bar { height: 100%; border-radius: 4px; transition: width 0.4s; }
+        .grade-block .gb-bar.A { background: #27ae60; }
+        .grade-block .gb-bar.B { background: #2980b9; }
+        .grade-block .gb-bar.C { background: #f39c12; }
+        .grade-block .gb-bar.D { background: #e67e22; }
+        .grade-block .gb-bar.F { background: #e74c3c; }
+        .grade-block .gb-bar.NA { background: #dee2e6; }
+        .grade-block .gb-pct { font-size: 12px; color: #666; margin-top: 3px; }
         </style>
 </head>
 <body>
@@ -1182,6 +1302,10 @@
                     <h3>🎯 Next Milestone</h3>
                     <div id="nextMilestoneContent"><span class="nm-days">—</span></div>
                 </div>
+
+                <!-- 4-Week Grade Report Cards -->
+                <h2 class="section-title">Training Report Cards</h2>
+                <div class="grade-blocks" id="gradeBlocks"></div>
 
                 <!-- Weekly Progress Chart -->
                 <h2 class="section-title">Weekly Progress Chart</h2>
@@ -3112,6 +3236,35 @@
             // ── Weekly Progress Chart ──
             renderProgressChart();
 
+    
+        // ── Carry-Forward Goals (based on past performance) ────────────────
+        function getCarryForwardGoals(currentWeek) {
+            const results = [];
+            // Look back up to 4 weeks
+            for (var w = Math.max(8, currentWeek - 4); w < currentWeek; w++) {
+                const wInfo = trainingData[w];
+                const wData = appData.weekData && appData.weekData[w];
+                if (!wInfo || !wData) continue;
+                if (appData.completedWeeks.indexOf(w) !== -1) continue; // fully done
+                wInfo.goals.forEach(function(g, i) {
+                    let pct = 0;
+                    if (wData.goalProgress && wData.goalProgress[i] !== undefined) {
+                        pct = wData.goalProgress[i];
+                    } else if (wData.completedGoals && wData.completedGoals.indexOf(i) !== -1) {
+                        pct = 100;
+                    }
+                    // Only include goals below 70% completion
+                    if (pct < 70) {
+                        results.push({ week: w, text: g.text, pct: pct });
+                    }
+                });
+            }
+            // Limit to 5 most recent carry-forwards to avoid clutter
+            return results.slice(-5);
+        }
+        // ── 4-Week Grade Blocks ──
+            renderGradeBlocks();
+
             // Update speedometer needle
             updateSpeedometer(completedCount, daysOld, totalWeeks);
         }
@@ -3198,6 +3351,189 @@
         }
 
 
+
+        // ── Report Card ────────────────────────────────────────────────────
+        function calcGrade(pct) {
+            if (pct === null) return { letter: '—', cls: 'NA' };
+            if (pct >= 90) return { letter: 'A', cls: 'A' };
+            if (pct >= 80) return { letter: 'B', cls: 'B' };
+            if (pct >= 70) return { letter: 'C', cls: 'C' };
+            if (pct >= 60) return { letter: 'D', cls: 'D' };
+            return { letter: 'F', cls: 'F' };
+        }
+
+        function showReportCard(week) {
+            const wInfo   = trainingData[week];
+            const wData   = (appData.weekData && appData.weekData[week]) || {};
+            const logs    = wData.dailyLogs || [];
+            const goals   = wInfo ? wInfo.goals : [];
+            const completed = appData.completedWeeks.indexOf(parseInt(week)) !== -1;
+
+            // Calculate completion %
+            let pct = null;
+            if (goals.length > 0) {
+                let total = 0;
+                if (wData.goalProgress) {
+                    Object.values(wData.goalProgress).forEach(function(v){ total += v; });
+                    pct = Math.round(total / goals.length);
+                } else if (wData.completedGoals && wData.completedGoals.length > 0) {
+                    pct = Math.round((wData.completedGoals.length / goals.length) * 100);
+                } else {
+                    pct = 0;
+                }
+                if (completed) pct = 100;
+            }
+            const grade = calcGrade(pct);
+
+            // Total sessions + time
+            const totalSessions = logs.length;
+            const totalMins = logs.reduce(function(sum, log) {
+                if (!log.duration) return sum;
+                const parts = log.duration.split(':').map(Number);
+                if (parts.length === 3) return sum + parts[0]*60 + parts[1] + Math.round(parts[2]/60);
+                if (parts.length === 2) return sum + parts[0] + Math.round(parts[1]/60);
+                return sum;
+            }, 0);
+            const timeStr = totalMins > 0 ? (totalMins >= 60 ? Math.floor(totalMins/60) + 'h ' + (totalMins%60) + 'm' : totalMins + ' min') : '—';
+
+            // Build goal rows
+            let goalsHtml = '';
+            goals.forEach(function(g, i) {
+                let progress = 0;
+                if (completed) { progress = 100; }
+                else if (wData.goalProgress && wData.goalProgress[i] !== undefined) { progress = wData.goalProgress[i]; }
+                else if (wData.completedGoals && wData.completedGoals.indexOf(i) !== -1) { progress = 100; }
+                const icon = progress === 100 ? '✅' : progress > 0 ? '🔄' : '⬜';
+                const pctLabel = progress > 0 ? progress + '%' : '';
+                goalsHtml += '<div class="rc-goal"><span class="rc-check">' + icon + '</span><span>' + g.text + '</span><span class="rc-pct">' + pctLabel + '</span></div>';
+            });
+
+            // Build logs rows
+            let logsHtml = '';
+            if (logs.length === 0) {
+                logsHtml = '<div style="color:#aaa;font-size:13px;font-style:italic;">No daily logs recorded for this week.</div>';
+            } else {
+                logs.slice().sort(function(a,b){ return new Date(a.date)-new Date(b.date); }).forEach(function(log) {
+                    const d = new Date(log.date + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+                    let meta = [];
+                    if (log.weather)  meta.push(log.weather);
+                    if (log.temp)     meta.push(log.temp + '°F');
+                    if (log.duration) meta.push('⏱️ ' + log.duration);
+                    logsHtml += '<div class="rc-log-item">';
+                    logsHtml += '<div class="rc-log-date">' + d + '</div>';
+                    if (meta.length) logsHtml += '<div class="rc-log-meta">' + meta.join(' · ') + '</div>';
+                    if (log.photo) logsHtml += '<img src="' + log.photo + '" class="rc-photo">';
+                    logsHtml += '<div class="rc-log-text">' + (log.entry || '') + '</div>';
+                    logsHtml += '</div>';
+                });
+            }
+
+            // Notes
+            const notesHtml = wData.notes
+                ? '<div class="rc-section"><h4>📝 Week Notes</h4><div class="rc-notes">' + wData.notes + '</div></div>'
+                : '';
+
+            const pctDisplay = pct !== null ? pct + '%' : '—';
+            const statusBadge = completed ? ' <span style="font-size:12px;background:#27ae60;color:white;padding:2px 8px;border-radius:10px;vertical-align:middle;">COMPLETE</span>' : '';
+
+            document.getElementById('rcCard').innerHTML =
+                '<div class="rc-header">' +
+                    '<h2>📋 Week ' + week + ' Report Card' + statusBadge + '</h2>' +
+                    '<div class="rc-subtitle">' + (wInfo ? wInfo.phase : '') + ' · ' + (wInfo ? wInfo.age : '') + '</div>' +
+                '</div>' +
+                '<div class="rc-grade-row">' +
+                    '<div class="rc-grade ' + grade.cls + '">' + grade.letter + '</div>' +
+                    '<div class="rc-stats">' +
+                        '<strong>' + pctDisplay + '</strong> Goals Complete<br>' +
+                        '<strong>' + totalSessions + '</strong> Session' + (totalSessions !== 1 ? 's' : '') + ' Logged<br>' +
+                        '<strong>' + timeStr + '</strong> Total Training Time' +
+                    '</div>' +
+                '</div>' +
+                '<div class="rc-section"><h4>🎯 Goals</h4>' + goalsHtml + '</div>' +
+                '<div class="rc-section"><h4>📅 Daily Logs</h4>' + logsHtml + '</div>' +
+                notesHtml +
+                '<div class="rc-footer">' +
+                    '<button class="rc-btn rc-btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>' +
+                    '<button class="rc-btn rc-btn-close" onclick="closeReportCard()">✕ Close</button>' +
+                '</div>';
+
+            document.getElementById('rcOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeReportCard() {
+            document.getElementById('rcOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // ── 4-Week Grade Blocks ────────────────────────────────────────────
+        // Phase groupings: every 4 weeks with a label
+        const trainingPhases = [
+            { label: "Foundation",          weeks: [8,9,10,11]   },
+            { label: "Early Obedience",     weeks: [12,13,14,15] },
+            { label: "Retrieving Basics",   weeks: [16,17,18,19] },
+            { label: "Bird & Water Work",   weeks: [20,21,22,23] },
+            { label: "Advanced Field",      weeks: [24,25,26,27] },
+            { label: "Retrieve Mastery",    weeks: [28,29,30,31] },
+            { label: "Desire Training",     weeks: [32,33,34,35] },
+            { label: "E-Collar & Marks",    weeks: [36,37,38,39] },
+            { label: "Started Level Prep",  weeks: [40,41,42,43] },
+            { label: "Hunt Test Ready",     weeks: [44,45,46,47,48] }
+        ];
+
+        function calcBlockGrade(weeks) {
+            let totalPct = 0, counted = 0;
+            weeks.forEach(function(w) {
+                const wInfo = trainingData[w];
+                const wData = appData.weekData && appData.weekData[w];
+                if (!wInfo) return;
+                const numGoals = wInfo.goals.length;
+                if (numGoals === 0) return;
+                counted++;
+                if (appData.completedWeeks.indexOf(w) !== -1) { totalPct += 100; return; }
+                if (!wData) return;
+                let p = 0;
+                if (wData.goalProgress) {
+                    Object.values(wData.goalProgress).forEach(function(v){ p += v; });
+                    p = p / numGoals;
+                } else if (wData.completedGoals) {
+                    p = (wData.completedGoals.length / numGoals) * 100;
+                }
+                totalPct += p;
+            });
+            if (counted === 0) return null;
+            return Math.round(totalPct / counted);
+        }
+
+        function renderGradeBlocks() {
+            const container = document.getElementById('gradeBlocks');
+            if (!container || !appData) return;
+            let html = '';
+            trainingPhases.forEach(function(phase) {
+                const pct = calcBlockGrade(phase.weeks);
+                const g = pct === null ? { letter: '—', cls: 'NA' } : calcGrade(pct);
+                const weekRange = 'Weeks ' + phase.weeks[0] + '–' + phase.weeks[phase.weeks.length-1];
+                const anyData = phase.weeks.some(function(w) {
+                    return appData.completedWeeks.indexOf(w) !== -1 ||
+                           (appData.weekData && appData.weekData[w] &&
+                            ((appData.weekData[w].completedGoals && appData.weekData[w].completedGoals.length > 0) ||
+                             (appData.weekData[w].goalProgress && Object.keys(appData.weekData[w].goalProgress).length > 0)));
+                });
+                const blockClass = anyData ? 'grade-block complete-block' : 'grade-block';
+                const barWidth = pct !== null ? pct : 0;
+                // Click to open report card for first week in phase with data, or first week
+                const clickWeek = phase.weeks.find(function(w){ return appData.completedWeeks.indexOf(w)!==-1 || (appData.weekData&&appData.weekData[w]); }) || phase.weeks[0];
+                html += '<div class="' + blockClass + '" onclick="showReportCard(' + clickWeek + ')" title="Click to see report card">';
+                html += '<div class="gb-grade ' + g.cls + '">' + g.letter + '</div>';
+                html += '<div class="gb-info">';
+                html += '<div class="gb-title">' + phase.label + '</div>';
+                html += '<div class="gb-weeks">' + weekRange + '</div>';
+                html += '<div class="gb-bar-wrap"><div class="gb-bar ' + g.cls + '" style="width:' + barWidth + '%"></div></div>';
+                html += '<div class="gb-pct">' + (pct !== null ? pct + '% complete' : 'Not started') + '</div>';
+                html += '</div></div>';
+            });
+            container.innerHTML = html;
+        }
         // ── Streak Calculator ──────────────────────────────────────────────
         function calcStreak() {
             if (!appData) return 0;
@@ -3389,7 +3725,19 @@
             if (appData.completedWeeks.indexOf(week) !== -1) {
                 html += '<div class="alert alert-success"><span class="alert-icon">✅</span>Week ' + week + ' completed!</div>';
             }
-            
+
+            // ── Carry-Forward Goals from previous week ──
+            const carryForward = getCarryForwardGoals(week);
+            if (carryForward.length > 0) {
+                html += '<div style="background:#fff8e1;border-left:4px solid #f39c12;border-radius:8px;padding:12px 16px;margin-bottom:12px;">';
+                html += '<div style="font-weight:bold;font-size:14px;color:#b7770d;margin-bottom:8px;">⚠️ Carry-Forward: Needs More Work</div>';
+                html += '<div style="font-size:12px;color:#888;margin-bottom:8px;">These goals from previous weeks were not fully completed — give them extra attention this week:</div>';
+                carryForward.forEach(function(item) {
+                    html += '<div style="font-size:13px;color:#555;padding:4px 0;border-bottom:1px solid #f0e0b0;">📌 <strong>Week ' + item.week + ':</strong> ' + item.text + ' <span style="float:right;color:#e67e22;">' + item.pct + '%</span></div>';
+                });
+                html += '</div>';
+            }
+
             // Stonnie Dennis Techniques Section
             if (data.stonnieTechniques && data.stonnieTechniques.length > 0) {
                 html += '<div class="training-section" style="background-image: radial-gradient(ellipse at 15% 25%, rgba(62, 52, 42, 0.3) 0%, transparent 40%), radial-gradient(ellipse at 75% 65%, rgba(82, 72, 58, 0.2) 0%, transparent 45%), linear-gradient(135deg, #E8E0D8 0%, #D8D0C8 100%); border-left: 4px solid #6B5D4B; color: #2C2416;"><h3 style="color: #3D4A34;">🎓 PUPPY TRAINING TECHNIQUES</h3><ul class="resource-list">';
@@ -3514,7 +3862,7 @@
             
             html += '<div class="training-section"><h3>📝 Week Summary Notes</h3><textarea class="notes-textarea" id="weekNotes">' + (weekData.notes || '') + '</textarea></div>';
             
-            html += '<div class="button-group"><button class="btn btn-primary" id="saveBtn">💾 Save Progress</button><button class="btn btn-success" id="completeBtn">✅ Complete Week</button></div>';
+            html += '<div class="button-group"><button class="btn btn-primary" id="saveBtn">💾 Save Progress</button><button class="btn btn-success" id="completeBtn">✅ Complete Week</button><button class="btn" id="reportCardBtn" style="background:linear-gradient(135deg,#2c3e50,#3d5a80);color:white;border:none;">📋 Report Card</button></div>';
             
             document.getElementById('weekContent').innerHTML = html;
             
@@ -3530,6 +3878,7 @@
             document.getElementById('saveBtn').addEventListener('click', saveWeekData);
             document.getElementById('completeBtn').addEventListener('click', markWeekComplete);
             document.getElementById('saveDailyLog').addEventListener('click', saveDailyLog);
+            document.getElementById('reportCardBtn').addEventListener('click', function() { showReportCard(appData.currentWeek); });
         }
 
         function setGoalProgress(week, idx, value) {
@@ -3931,5 +4280,12 @@
             }
         });
     </script>
+
+    <!-- Weekly Report Card Modal -->
+    <div class="rc-overlay" id="rcOverlay" onclick="if(event.target===this)closeReportCard()">
+        <div class="rc-card" id="rcCard">
+            <!-- filled dynamically -->
+        </div>
+    </div>
 </body>
 </html>
