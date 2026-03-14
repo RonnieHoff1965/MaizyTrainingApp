@@ -1171,6 +1171,29 @@
                     </div>
                 </div>
                 
+                <!-- Streak Banner -->
+                <div id="streakBanner" class="streak-banner">
+                    <span class="streak-emoji">🔥</span>
+                    <span id="streakText">0 Day Streak — log a session to start!</span>
+                </div>
+
+                <!-- Next Milestone Countdown -->
+                <div id="nextMilestoneCard" class="next-milestone-card">
+                    <h3>🎯 Next Milestone</h3>
+                    <div id="nextMilestoneContent"><span class="nm-days">—</span></div>
+                </div>
+
+                <!-- Weekly Progress Chart -->
+                <h2 class="section-title">Weekly Progress Chart</h2>
+                <div class="progress-chart">
+                    <div class="chart-bars" id="progressChart"></div>
+                    <div style="display:flex;gap:12px;margin-top:6px;font-size:12px;color:#666;">
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#5C6D4C;border-radius:2px;margin-right:3px;"></span>Complete</span>
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#a8b89a;border-radius:2px;margin-right:3px;"></span>In Progress</span>
+                        <span><span style="display:inline-block;width:12px;height:12px;background:#dee2e6;border-radius:2px;margin-right:3px;"></span>Not Started</span>
+                    </div>
+                </div>
+
                 <h2 class="section-title">Critical Milestones</h2>
                 <div class="milestone-list" id="milestoneList"></div>
                 
@@ -3039,7 +3062,39 @@
             document.getElementById('daysToTestStat').textContent = daysToStartedTest;
             document.getElementById('headerProgress').textContent = progressPercent + '%';
             document.getElementById('headerAge').textContent = ageDisplay;
-            
+
+            // ── Streak Banner ──
+            const streak = calcStreak();
+            const streakBanner = document.getElementById('streakBanner');
+            const streakText   = document.getElementById('streakText');
+            if (streakBanner && streakText) {
+                if (streak === 0) {
+                    streakBanner.style.background = 'linear-gradient(135deg, #95a5a6, #7f8c8d)';
+                    streakText.textContent = 'No active streak — log a session to start! 🐾';
+                } else {
+                    streakBanner.style.background = 'linear-gradient(135deg, #e67e22, #f39c12)';
+                    streakText.textContent = '🔥 ' + streak + ' Day Streak — keep it going!';
+                }
+            }
+
+            // ── Next Milestone Countdown ──
+            const nm = getNextMilestone();
+            const nmCard    = document.getElementById('nextMilestoneCard');
+            const nmContent = document.getElementById('nextMilestoneContent');
+            if (nmCard && nmContent && nm) {
+                const weeksAway = nm.week - appData.currentWeek;
+                const daysAway  = weeksAway * 7;
+                if (nm.critical) nmCard.classList.add('critical-next');
+                else nmCard.classList.remove('critical-next');
+                nmContent.innerHTML =
+                    '<div class="nm-text">' + nm.text + '</div>' +
+                    '<div><span class="nm-days">' + (weeksAway <= 0 ? 'NOW' : daysAway + ' days') + '</span> ' +
+                    '<span class="nm-label">— Week ' + nm.week + '</span></div>';
+            }
+
+            // ── Weekly Progress Chart ──
+            renderProgressChart();
+
             // Update speedometer needle
             updateSpeedometer(completedCount, daysOld, totalWeeks);
         }
@@ -3123,6 +3178,146 @@
                 
                 container.appendChild(div);
             });
+        }
+
+
+        // ── Streak Calculator ──────────────────────────────────────────────
+        function calcStreak() {
+            if (!appData) return 0;
+            const allDates = new Set();
+            Object.values(appData.weekData).forEach(function(wd) {
+                if (wd && wd.dailyLogs) {
+                    wd.dailyLogs.forEach(function(log) { allDates.add(log.date); });
+                }
+            });
+            if (allDates.size === 0) return 0;
+            const todayStr     = new Date().toISOString().split('T')[0];
+            const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+            if (!allDates.has(todayStr) && !allDates.has(yesterdayStr)) return 0;
+            let checkDate = allDates.has(todayStr) ? todayStr : yesterdayStr;
+            let streak = 0;
+            while (allDates.has(checkDate)) {
+                streak++;
+                const d = new Date(checkDate + 'T12:00:00');
+                d.setDate(d.getDate() - 1);
+                checkDate = d.toISOString().split('T')[0];
+            }
+            return streak;
+        }
+
+        // ── Next Milestone ─────────────────────────────────────────────────
+        function getNextMilestone() {
+            if (!appData) return null;
+            for (var i = 0; i < milestones.length; i++) {
+                const m = milestones[i];
+                if (appData.completedWeeks.indexOf(m.week) === -1 && m.week >= appData.currentWeek) {
+                    return m;
+                }
+            }
+            return null;
+        }
+
+        // ── Weekly Progress Chart ──────────────────────────────────────────
+        function renderProgressChart() {
+            const container = document.getElementById('progressChart');
+            if (!container || !appData) return;
+            const weeks = Object.keys(trainingData).map(Number).sort(function(a,b){return a-b;});
+            let html = '';
+            weeks.forEach(function(w) {
+                const completed = appData.completedWeeks.indexOf(w) !== -1;
+                const wd = appData.weekData[w];
+                const wInfo = trainingData[w];
+                let pct = 0;
+                if (completed) { pct = 100; }
+                else if (wd && wInfo) {
+                    const numGoals = wInfo.goals.length;
+                    if (numGoals > 0) {
+                        let total = 0;
+                        if (wd.goalProgress) { Object.values(wd.goalProgress).forEach(function(v){ total += v; }); pct = total / numGoals; }
+                        else if (wd.completedGoals) { pct = (wd.completedGoals.length / numGoals) * 100; }
+                    }
+                }
+                const barClass = completed ? 'done' : (pct > 0 ? 'partial' : 'empty');
+                const barH = Math.max(4, Math.round(pct * 0.6)) + 'px';
+                html += '<div class="chart-bar-wrap" title="Week ' + w + ': ' + Math.round(pct) + '%">';
+                html += '<div class="chart-bar ' + barClass + '" style="height:' + barH + ';min-height:4px;"></div>';
+                html += '<div class="chart-bar-num">' + w + '</div>';
+                html += '</div>';
+            });
+            container.innerHTML = html;
+        }
+
+        // ── Timer Functions ────────────────────────────────────────────────
+        window._timerInterval = null;
+        window._timerElapsed  = 0;
+        window._timerRunning  = false;
+        window._timerTick     = 0;
+
+        function formatTimer(secs) {
+            const h = Math.floor(secs / 3600);
+            const m = Math.floor((secs % 3600) / 60);
+            const s = secs % 60;
+            return (h ? String(h).padStart(2,'0') + ':' : '') + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+        }
+        function timerStart() {
+            if (window._timerRunning) return;
+            window._timerRunning = true;
+            window._timerTick = Date.now() - (window._timerElapsed * 1000);
+            window._timerInterval = setInterval(function() {
+                window._timerElapsed = Math.floor((Date.now() - window._timerTick) / 1000);
+                const el = document.getElementById('timerDisplay');
+                if (el) el.textContent = formatTimer(window._timerElapsed);
+            }, 1000);
+            const startBtn = document.getElementById('timerStartBtn');
+            const stopBtn  = document.getElementById('timerStopBtn');
+            if (startBtn) startBtn.style.display = 'none';
+            if (stopBtn)  stopBtn.style.display  = 'inline-block';
+        }
+        function timerStop() {
+            if (!window._timerRunning) return;
+            window._timerRunning = false;
+            clearInterval(window._timerInterval);
+            const startBtn = document.getElementById('timerStartBtn');
+            const stopBtn  = document.getElementById('timerStopBtn');
+            if (startBtn) startBtn.style.display = 'inline-block';
+            if (stopBtn)  stopBtn.style.display  = 'none';
+        }
+        function timerReset() {
+            timerStop();
+            window._timerElapsed = 0;
+            const el = document.getElementById('timerDisplay');
+            if (el) el.textContent = '00:00';
+        }
+
+        // ── Weather Selection ──────────────────────────────────────────────
+        function selectWeather(btn) {
+            document.querySelectorAll('.weather-btn').forEach(function(b){ b.classList.remove('selected'); });
+            btn.classList.add('selected');
+        }
+
+        // ── Photo Handler ──────────────────────────────────────────────────
+        window._pendingPhoto = '';
+        function handlePhotoSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const maxW = 400, maxH = 400;
+                    let w = img.width, h = img.height;
+                    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+                    if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    window._pendingPhoto = canvas.toDataURL('image/jpeg', 0.5);
+                    const preview = document.getElementById('logPhotoPreview');
+                    if (preview) { preview.src = window._pendingPhoto; preview.style.display = 'block'; }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         }
 
         function initWeekButtons() {
@@ -3239,14 +3434,41 @@
             html += '<div class="training-section" style="background-image: radial-gradient(ellipse at 30% 40%, rgba(139, 125, 107, 0.3) 0%, transparent 45%), radial-gradient(ellipse at 65% 65%, rgba(159, 145, 125, 0.2) 0%, transparent 50%), linear-gradient(135deg, #FFF8E6 0%, #F5F0DC 100%); border-left: 4px solid #9B8D7B; color: #2C2416;">';
             html += '<h3>📅 Daily Training Log</h3>';
             html += '<p style="margin-bottom: 10px; font-size: 14px;">Record what you did today with Maizy:</p>';
-            
-            // Current date
+
+            // Date
             const today = new Date().toISOString().split('T')[0];
             html += '<div style="margin-bottom: 10px;"><strong>Date:</strong> <input type="date" id="logDate" value="' + today + '" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></div>';
-            
-            // Daily log textarea
+
+            // ── Session Timer ──
+            html += '<div class="timer-section">';
+            html += '<div style="font-size:13px;font-weight:bold;color:#4A5840;margin-bottom:6px;">⏱️ Session Timer</div>';
+            html += '<div class="timer-display" id="timerDisplay">00:00:00</div>';
+            html += '<div class="timer-btns">';
+            html += '<button class="timer-btn start" id="timerStartBtn" onclick="timerStart()">▶ Start</button>';
+            html += '<button class="timer-btn stop"  id="timerStopBtn"  onclick="timerStop()" style="display:none;">⏹ Stop</button>';
+            html += '<button class="timer-btn reset" id="timerResetBtn" onclick="timerReset()">↺ Reset</button>';
+            html += '</div></div>';
+
+            // ── Weather ──
+            html += '<div style="margin-bottom:10px;">';
+            html += '<div style="font-size:13px;font-weight:bold;margin-bottom:6px;">🌤️ Weather Conditions</div>';
+            html += '<div class="weather-row">';
+            const weathers = ['☀️ Sunny','⛅ Cloudy','🌧️ Rainy','💨 Windy','🥵 Hot','🥶 Cold'];
+            weathers.forEach(function(w){ html += '<button class="weather-btn" data-weather="' + w + '" onclick="selectWeather(this)">' + w + '</button>'; });
+            html += '<input type="number" id="logTemp" class="temp-input" placeholder="°F" min="-20" max="120">';
+            html += '</div></div>';
+
+            // ── Photo ──
+            html += '<div class="photo-section">';
+            html += '<div style="font-size:13px;font-weight:bold;margin-bottom:6px;">📷 Add Photo</div>';
+            html += '<input type="file" id="logPhotoInput" accept="image/*" style="display:none;" onchange="handlePhotoSelect(this)">';
+            html += '<button onclick="document.getElementById('logPhotoInput').click()" style="padding:7px 14px;border:2px dashed #c8d8b0;border-radius:8px;background:#f8fbf4;cursor:pointer;font-size:13px;">📷 Choose Photo</button>';
+            html += '<img id="logPhotoPreview" class="photo-preview">';
+            html += '</div>';
+
+            // ── Log Textarea ──
             html += '<textarea id="dailyLogEntry" placeholder="What did you work on today?\n\nExample:\n• Practiced SIT command - 80% success!\n• Met 3 new people at pet store\n• First bumper retrieves - she loved it!\n• Crate training going well - slept 3 hours" style="width: 100%; min-height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit;"></textarea>';
-            
+
             html += '<button id="saveDailyLog" style="margin-top: 10px; background-image: radial-gradient(circle at 25% 35%, rgba(76, 88, 68, 0.4) 0%, transparent 45%), linear-gradient(135deg, #6B7C5C 0%, #5C6D4C 100%); color: white; border: 2px solid #4A5840; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">💾 Save Daily Log</button>';
             
             // Show previous daily logs for this week
@@ -3256,8 +3478,16 @@
                 dailyLogs.sort(function(a, b) { return new Date(b.date) - new Date(a.date); }).forEach(function(log) {
                     const logDate = new Date(log.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
                     html += '<div style="background: white; padding: 12px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #6B7A5A;">';
-                    html += '<div style="font-weight: bold; color: #5C6D4C; margin-bottom: 5px;">' + logDate + '</div>';
-                    html += '<div style="white-space: pre-wrap;">' + log.entry + '</div>';
+                    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">';
+                    html += '<span style="font-weight:bold;color:#5C6D4C;">' + logDate + '</span>';
+                    let meta = '';
+                    if (log.weather) meta += '<span style="font-size:13px;">' + log.weather + '</span> ';
+                    if (log.temp)    meta += '<span style="font-size:12px;color:#666;">' + log.temp + '°F</span> ';
+                    if (log.duration) meta += '<span style="font-size:12px;color:#888;">⏱️ ' + log.duration + '</span>';
+                    html += '<span>' + meta + '</span>';
+                    html += '</div>';
+                    if (log.photo) html += '<img src="' + log.photo + '" class="photo-thumb"><br>';
+                    html += '<div style="white-space: pre-wrap;margin-top:4px;">' + log.entry + '</div>';
                     html += '</div>';
                 });
                 html += '</div>';
@@ -3317,45 +3547,52 @@
             const week = appData.currentWeek;
             const logDate = document.getElementById('logDate').value;
             const logEntry = document.getElementById('dailyLogEntry').value.trim();
-            
+
             if (!logEntry) {
                 alert('⚠️ Please enter some training notes for today!');
                 return;
             }
-            
+
+            // Collect weather, temp, duration, photo
+            const selectedWeather = (document.querySelector('.weather-btn.selected') || {}).getAttribute ? document.querySelector('.weather-btn.selected').getAttribute('data-weather') : '';
+            const logTemp = (document.getElementById('logTemp') || {}).value || '';
+            const logDuration = window._timerElapsed > 0 ? formatTimer(window._timerElapsed) : '';
+            const logPhoto = window._pendingPhoto || '';
+
             const weekData = appData.weekData[week] || { completedGoals: [], dailyLogs: [] };
-            
-            // Initialize dailyLogs array if it doesn't exist
-            if (!weekData.dailyLogs) {
-                weekData.dailyLogs = [];
-            }
-            
-            // Check if log already exists for this date
+            if (!weekData.dailyLogs) weekData.dailyLogs = [];
+
             const existingLogIndex = weekData.dailyLogs.findIndex(function(log) {
                 return log.date === logDate;
             });
-            
+
             const logData = {
                 date: logDate,
                 entry: logEntry,
                 timestamp: new Date().toISOString()
             };
-            
+            if (selectedWeather) logData.weather = selectedWeather;
+            if (logTemp) logData.temp = logTemp;
+            if (logDuration) logData.duration = logDuration;
+            if (logPhoto) logData.photo = logPhoto;
+
             if (existingLogIndex !== -1) {
-                // Update existing log
                 weekData.dailyLogs[existingLogIndex] = logData;
             } else {
-                // Add new log
                 weekData.dailyLogs.push(logData);
             }
-            
+
             appData.weekData[week] = weekData;
             saveData(appData);
-            
-            // Clear the entry field and re-render to show the new log
+
+            // Reset timer + photo after save
+            timerReset();
+            window._pendingPhoto = '';
+
             document.getElementById('dailyLogEntry').value = '';
             renderWeekContent(week);
-            
+            updateDashboard();
+
             alert('✅ Daily log saved!');
         }
 

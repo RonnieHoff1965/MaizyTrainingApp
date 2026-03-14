@@ -11,8 +11,14 @@ A complete hunting dog training schedule app for **Maple Run's Marsh Maiden** �
 ## Features
 
 - **Dashboard** — Real-time age tracking, training progress gauge (0–100%), critical milestone timeline
+  - 🔥 Training streak counter (consecutive days logged)
+  - 🎯 Next milestone countdown with days remaining
+  - 📊 Weekly progress bar chart across all 41 weeks
 - **Training** — Week-by-week training plan (Weeks 8–48), goal checklists, Stonnie Dennis techniques, daily training log
-- **History** — Full log of completed weeks, daily entries, and notes
+  - ⏱️ Built-in session timer (stopwatch) — auto-saves duration with each log entry
+  - 🌤️ Weather conditions logger (Sunny/Cloudy/Rainy/Windy/Hot/Cold + temperature °F)
+  - 📷 Photo attachment — attach a photo to any daily log entry (resized + stored in cloud)
+- **History** — Full log of completed weeks, daily entries, weather, photos, and session durations
 - **Resources** — Recommended books and online content (Stonnie Dennis YouTube, etc.)
 
 ## Tech Stack
