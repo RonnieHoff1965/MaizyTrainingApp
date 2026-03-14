@@ -3385,11 +3385,11 @@
                 const wInfo = trainingData[week];
                 document.getElementById('rcCard').innerHTML =
                     '<div class="rc-header">' +
-                        '<h2>🔒 Week ' + week + ' Report Card</h2>' +
+                        '<h2>Week ' + week + ' Report Card</h2>' +
                         '<div class="rc-subtitle">' + (wInfo ? wInfo.phase + ' · ' + wInfo.age : '') + '</div>' +
                     '</div>' +
                     '<div style="text-align:center;padding:40px 20px;">' +
-                        '<div style="font-size:64px;margin-bottom:16px;">🔒</div>' +
+                        '<div style="font-size:48px;font-weight:bold;color:#bdc3c7;margin-bottom:16px;">N/A</div>' +
                         '<div style="font-size:20px;font-weight:bold;color:#555;margin-bottom:8px;">Not Yet Available</div>' +
                         '<div style="font-size:15px;color:#888;">This training week begins on</div>' +
                         '<div style="font-size:18px;font-weight:bold;color:#3d5a80;margin:10px 0;">' + availDate + '</div>' +
@@ -3557,11 +3557,11 @@
                 if (!weekHasArrived(firstWeek)) {
                     const availDate = weekArrivalDateStr(firstWeek);
                     html += '<div class="grade-block future-block" title="Available ' + availDate + '">';
-                    html += '<div class="gb-grade LOCKED">🔒</div>';
+                    html += '<div class="gb-grade NA">N/A</div>';
                     html += '<div class="gb-info">';
                     html += '<div class="gb-title">' + phase.label + '</div>';
                     html += '<div class="gb-weeks">' + weekRange + '</div>';
-                    html += '<div class="gb-bar-wrap"><div class="gb-bar LOCKED" style="width:0%"></div></div>';
+                    html += '<div class="gb-bar-wrap"><div class="gb-bar NA" style="width:0%"></div></div>';
                     html += '<div class="gb-pct future-label">Available ' + availDate + '</div>';
                     html += '</div></div>';
                     return;
