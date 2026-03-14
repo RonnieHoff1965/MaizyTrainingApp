@@ -108,12 +108,14 @@
                 linear-gradient(135deg, #C9B99B 0%, #A99B7B 50%, #B9AB8B 100%);
         }
         
-        html, body {
+        html {
+            overflow-x: hidden;  /* prevents horiz scroll without breaking iOS scroll */
+        }
+        body {
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100%;
-            overflow-x: hidden;
+            min-height: 100dvh;
         }
 
         * {
@@ -1247,6 +1249,58 @@
         .grade-block .gb-grade.LOCKED { color: #c8cdd2; font-size: 22px; }
         .grade-block .gb-bar.LOCKED { background: #dee2e6; }
         .grade-block .gb-pct.future-label { color: #aaa; font-style: italic; }
+
+        /* ── Feeding Guide Table ──────────────────────────────────────────── */
+        .feeding-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        .feeding-table th {
+            background: #5C6D4C;
+            color: white;
+            padding: 7px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .feeding-table td {
+            padding: 7px 8px;
+            border-bottom: 1px solid #eee;
+            color: #444;
+        }
+        .feeding-table tr:nth-child(even) td { background: #f9f9f6; }
+        .feeding-table tr.current-feed-row td {
+            background: #eaf4d8 !important;
+            font-weight: 700;
+            color: #3D4A34;
+        }
+        .feeding-table tr.future-feed-row td { color: #bbb; }
+        .feed-card {
+            background: linear-gradient(135deg, #f0f7e6, #e8f0d8);
+            border: 1.5px solid #7A9B5C;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+        }
+        .feed-card-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #3D4A34;
+            margin-bottom: 10px;
+        }
+        .feed-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #d8ebc8;
+            font-size: 13px;
+            color: #444;
+        }
+        .feed-row:last-child { border-bottom: none; }
+        .feed-row strong { color: #3D4A34; }
         .grade-block .gb-grade {
             font-size: 38px;
             font-weight: 900;
@@ -1437,7 +1491,11 @@
                 <h2 class="section-title">Critical Milestones</h2>
                 <div class="milestone-list" id="milestoneList"></div>
                 
-                <h2 class="section-title">Treat Transition Timeline</h2>
+                <h2 class="section-title">🍖 Daily Feeding Guide</h2>
+                <p style="font-size:13px;color:#666;margin:0 0 10px;">Treats = dry kibble. Daily ration split 50/50 — half for meals, half as training rewards.</p>
+                <div id="feedingGuideTable"></div>
+
+                <h2 class="section-title" style="margin-top:24px;">Treat Transition Timeline</h2>
                 <div class="milestone-list">
                     <div class="milestone-item upcoming">
                         <div>
@@ -3380,6 +3438,7 @@
         }
         // ── 4-Week Grade Blocks ──
             renderGradeBlocks();
+            renderFeedingGuide();
 
             // Update speedometer needle
             updateSpeedometer(completedCount, daysOld, totalWeeks);
@@ -3469,6 +3528,59 @@
 
 
         // ── Report Card ────────────────────────────────────────────────────
+        // ── Daily Feeding Guide (Female Lab, dry kibble) ─────────────────
+        // Daily ration split 50/50: half for regular meals, half for training treats
+        // Sources: AKC, Purina, Royal Canin large-breed puppy guidelines
+        const feedingGuide = [
+            { weeks:[8,9,10,11],         age:'2 months',   label:'Early Puppy',        daily:'2¼', dailyNum:2.25, meals:4, mealPortion:'¼',  treatDay:'1⅛', treatWeek:8    },
+            { weeks:[12,13,14,15],       age:'3 months',   label:'Growing Puppy',      daily:'2¾', dailyNum:2.75, meals:3, mealPortion:'½',  treatDay:'1⅜', treatWeek:9.5  },
+            { weeks:[16,17,18,19,20,21,22,23], age:'4–5 months', label:'Active Puppy', daily:'3¼', dailyNum:3.25, meals:3, mealPortion:'½',  treatDay:'1⅝', treatWeek:11.5 },
+            { weeks:[24,25,26,27],       age:'6 months',   label:'Growing Fast',       daily:'3½', dailyNum:3.5,  meals:2, mealPortion:'¾',  treatDay:'1¾', treatWeek:12.25},
+            { weeks:[28,29,30,31],       age:'7 months',   label:'Sub-Adult',          daily:'3¾', dailyNum:3.75, meals:2, mealPortion:'1',  treatDay:'1⅞', treatWeek:13   },
+            { weeks:[32,33,34,35,36,37,38,39], age:'8–9 months', label:'Near Adult',   daily:'4',  dailyNum:4.0,  meals:2, mealPortion:'1',  treatDay:'2',   treatWeek:14  },
+            { weeks:[40,41,42,43,44,45,46,47,48], age:'10–12 months', label:'Transition to Adult', daily:'4¼', dailyNum:4.25, meals:2, mealPortion:'1',  treatDay:'2⅛', treatWeek:15 },
+        ];
+
+        function getFeedingInfo(weekNum) {
+            return feedingGuide.find(function(f){ return f.weeks.indexOf(weekNum) !== -1; })
+                || feedingGuide[feedingGuide.length - 1];
+        }
+
+        function renderFeedingGuide() {
+            const container = document.getElementById('feedingGuideTable');
+            if (!container || !appData) return;
+            const currentWeek = appData.currentWeek || 8;
+            let html = '<table class="feeding-table">';
+            html += '<thead><tr>'
+                + '<th>Phase</th>'
+                + '<th>Age</th>'
+                + '<th>Daily Total</th>'
+                + '<th>Meals/Day</th>'
+                + '<th>Meal Portion</th>'
+                + '<th>Treats/Day ½</th>'
+                + '<th>Treat Budget/Week</th>'
+                + '</tr></thead><tbody>';
+            feedingGuide.forEach(function(f) {
+                const firstWeek = f.weeks[0];
+                const isCurrent = f.weeks.indexOf(currentWeek) !== -1;
+                const isFuture  = !weekHasArrived(firstWeek);
+                const rowClass  = isCurrent ? 'current-feed-row' : (isFuture ? 'future-feed-row' : '');
+                const marker    = isCurrent ? ' ◀ NOW' : '';
+                html += '<tr class="' + rowClass + '">'
+                    + '<td>' + f.label + marker + '</td>'
+                    + '<td>' + f.age + '</td>'
+                    + '<td>' + f.daily + ' cups</td>'
+                    + '<td>' + f.meals + '×/day</td>'
+                    + '<td>' + f.mealPortion + ' cup</td>'
+                    + '<td>' + f.treatDay + ' cups</td>'
+                    + '<td>' + f.treatWeek + ' cups</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table>';
+            html += '<div style="font-size:11px;color:#888;margin-top:6px;">⚠️ Always verify with your specific kibble brand's feeding chart. Amounts assume a large-breed puppy formula.</div>';
+            container.innerHTML = html;
+        }
+
         // ── Week Arrival Check ────────────────────────────────────────────
         function weekHasArrived(weekNum) {
             // A week "arrives" when Maizy is at least weekNum weeks old
@@ -3903,6 +4015,17 @@
                 });
                 html += '</div>';
             }
+
+            // ── Feeding callout for this week ──────────────────────────────
+            const feed = getFeedingInfo(week);
+            html += '<div class="feed-card">'
+                + '<div class="feed-card-title">🍖 Daily Feeding Guide — ' + feed.age + ' (' + feed.label + ')</div>'
+                + '<div class="feed-row"><span>📦 Total Daily Ration</span><strong>' + feed.daily + ' cups/day</strong></div>'
+                + '<div class="feed-row"><span>🍽️ Meal Food (½ ration)</span><strong>' + feed.mealPortion + ' cup × ' + feed.meals + ' meals/day</strong></div>'
+                + '<div class="feed-row"><span>🎯 Training Treats (½ ration)</span><strong>' + feed.treatDay + ' cups/day</strong></div>'
+                + '<div class="feed-row"><span>📅 Weekly Treat Budget</span><strong>' + feed.treatWeek + ' cups this week</strong></div>'
+                + '<div style="font-size:11px;color:#7A9B5C;margin-top:8px;">Treats = dry kibble from the daily ration. Always verify with your kibble brand's chart.</div>'
+                + '</div>';
 
             // Stonnie Dennis Techniques Section
             if (data.stonnieTechniques && data.stonnieTechniques.length > 0) {
