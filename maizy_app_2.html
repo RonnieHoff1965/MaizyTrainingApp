@@ -52,8 +52,101 @@
         #logoutBtn:hover { background: rgba(255,255,255,0.3); }
         #loadingOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #7D6E5C; display: flex; align-items: center;
-            justify-content: center; z-index: 9998; color: white; font-size: 18px;
+            background: #6B7A5A;
+            background-image:
+                radial-gradient(ellipse at 20% 30%, rgba(107,122,74,0.5) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 70%, rgba(92,78,60,0.5) 0%, transparent 50%);
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; z-index: 9998; color: white;
+            overflow: hidden;
+        }
+        .loading-center {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; position: relative; z-index: 2;
+        }
+        .loading-logo {
+            font-size: 64px;
+            animation: loadBounce 1s ease-in-out infinite alternate;
+            margin-bottom: 18px;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+        }
+        .loading-title {
+            font-size: 22px; font-weight: 800;
+            letter-spacing: 0.5px; text-align: center;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            margin-bottom: 6px;
+        }
+        .loading-sub {
+            font-size: 13px; opacity: 0.75; text-align: center;
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+        .loading-dots {
+            display: flex; gap: 8px; margin-top: 20px;
+        }
+        .loading-dots span {
+            width: 10px; height: 10px; background: white;
+            border-radius: 50%; opacity: 0.3;
+            animation: dotPulse 1.2s ease-in-out infinite;
+        }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        /* Dancing puppies */
+        .paw-dancer {
+            position: absolute;
+            font-size: 28px;
+            animation: pawDance 1.4s ease-in-out infinite alternate;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+            user-select: none;
+            pointer-events: none;
+        }
+        /* Each paw gets its own position + delay */
+        .paw-dancer:nth-child(1)  { top:8%;  left:6%;  animation-delay:0s;    font-size:22px; }
+        .paw-dancer:nth-child(2)  { top:12%; right:8%; animation-delay:0.2s;  font-size:30px; }
+        .paw-dancer:nth-child(3)  { top:22%; left:14%; animation-delay:0.4s;  font-size:18px; }
+        .paw-dancer:nth-child(4)  { top:18%; right:15%;animation-delay:0.1s;  font-size:26px; }
+        .paw-dancer:nth-child(5)  { bottom:22%; left:5%;  animation-delay:0.3s; font-size:24px; }
+        .paw-dancer:nth-child(6)  { bottom:18%; right:6%; animation-delay:0.5s; font-size:20px; }
+        .paw-dancer:nth-child(7)  { bottom:8%;  left:18%; animation-delay:0.15s;font-size:28px; }
+        .paw-dancer:nth-child(8)  { bottom:10%; right:18%;animation-delay:0.35s;font-size:22px; }
+        .paw-dancer:nth-child(9)  { top:42%; left:3%;  animation-delay:0.25s; font-size:20px; }
+        .paw-dancer:nth-child(10) { top:42%; right:3%; animation-delay:0.45s; font-size:18px; }
+
+        /* puppy emoji rows at top and bottom */
+        .puppy-row {
+            position: absolute; display: flex; gap: 14px;
+            left: 50%; transform: translateX(-50%);
+            z-index: 1;
+        }
+        .puppy-row.top    { top: 28px; }
+        .puppy-row.bottom { bottom: 28px; }
+        .puppy-row span {
+            font-size: 28px;
+            display: inline-block;
+            animation: puppyBounce 0.8s ease-in-out infinite alternate;
+        }
+        .puppy-row span:nth-child(1) { animation-delay: 0s; }
+        .puppy-row span:nth-child(2) { animation-delay: 0.13s; }
+        .puppy-row span:nth-child(3) { animation-delay: 0.26s; }
+        .puppy-row span:nth-child(4) { animation-delay: 0.39s; }
+        .puppy-row span:nth-child(5) { animation-delay: 0.52s; }
+
+        @keyframes loadBounce {
+            from { transform: translateY(0) scale(1); }
+            to   { transform: translateY(-10px) scale(1.08); }
+        }
+        @keyframes pawDance {
+            0%   { transform: translateY(0) rotate(-12deg) scale(1); opacity:0.55; }
+            50%  { transform: translateY(-14px) rotate(8deg) scale(1.15); opacity:0.9; }
+            100% { transform: translateY(-6px) rotate(15deg) scale(0.9); opacity:0.7; }
+        }
+        @keyframes puppyBounce {
+            from { transform: translateY(0) scaleX(1); }
+            to   { transform: translateY(-12px) scaleX(-1); }
+        }
+        @keyframes dotPulse {
+            0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+            40%            { opacity: 1;   transform: scale(1.2); }
         }
     </style>
     <style>
@@ -1461,7 +1554,39 @@
 <body>
 
     <!-- Loading screen -->
-    <div id="loadingOverlay">🐾 Loading Maizy's Training App...</div>
+    <div id="loadingOverlay">
+        <!-- Dancing paw prints (corners + sides) -->
+        <div class="paw-dancer">🐾</div>
+        <div class="paw-dancer">🐾</div>
+        <div class="paw-dancer">🐾</div>
+        <div class="paw-dancer">🐾</div>
+        <div class="paw-dancer">🐾</div>
+        <div class="paw-dancer">🐾</div>
+        <div class="paw-dancer">🐾</div>
+        <div class="paw-dancer">🐾</div>
+        <div class="paw-dancer">🐾</div>
+        <div class="paw-dancer">🐾</div>
+
+        <!-- Puppy row top -->
+        <div class="puppy-row top">
+            <span>🐶</span><span>🐶</span><span>🐶</span><span>🐶</span><span>🐶</span>
+        </div>
+
+        <!-- Center content -->
+        <div class="loading-center">
+            <div class="loading-logo">🐾</div>
+            <div class="loading-title">Maizy's Training Schedule</div>
+            <div class="loading-sub">Maple Run's Marsh Maiden</div>
+            <div class="loading-dots">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <!-- Puppy row bottom -->
+        <div class="puppy-row bottom">
+            <span>🐶</span><span>🐶</span><span>🐶</span><span>🐶</span><span>🐶</span>
+        </div>
+    </div>
 
     <!-- Login overlay -->
     <div id="loginOverlay" style="display:none;">
