@@ -3827,7 +3827,7 @@
             html += '<div class="photo-section">';
             html += '<div style="font-size:13px;font-weight:bold;margin-bottom:6px;">📷 Add Photo</div>';
             html += '<input type="file" id="logPhotoInput" accept="image/*" style="display:none;" onchange="handlePhotoSelect(this)">';
-            html += '<button onclick="document.getElementById('logPhotoInput').click()" style="padding:7px 14px;border:2px dashed #c8d8b0;border-radius:8px;background:#f8fbf4;cursor:pointer;font-size:13px;">📷 Choose Photo</button>';
+            html += '<button id="photoChooseBtn" style="padding:7px 14px;border:2px dashed #c8d8b0;border-radius:8px;background:#f8fbf4;cursor:pointer;font-size:13px;">📷 Choose Photo</button>';
             html += '<img id="logPhotoPreview" class="photo-preview">';
             html += '</div>';
 
@@ -3879,6 +3879,7 @@
             document.getElementById('completeBtn').addEventListener('click', markWeekComplete);
             document.getElementById('saveDailyLog').addEventListener('click', saveDailyLog);
             document.getElementById('reportCardBtn').addEventListener('click', function() { showReportCard(appData.currentWeek); });
+            document.getElementById('photoChooseBtn').addEventListener('click', function() { document.getElementById('logPhotoInput').click(); });
         }
 
         function setGoalProgress(week, idx, value) {
