@@ -3318,6 +3318,27 @@
             renderWeekContent(appData.currentWeek);
         }
 
+        // ── Carry-Forward Goals (based on past performance) ────────────────
+        function getCarryForwardGoals(currentWeek) {
+            const results = [];
+            for (var w = Math.max(8, currentWeek - 4); w < currentWeek; w++) {
+                const wInfo = trainingData[w];
+                const wData = appData.weekData && appData.weekData[w];
+                if (!wInfo || !wData) continue;
+                if (appData.completedWeeks.indexOf(w) !== -1) continue;
+                wInfo.goals.forEach(function(g, i) {
+                    let pct = 0;
+                    if (wData.goalProgress && wData.goalProgress[i] !== undefined) {
+                        pct = wData.goalProgress[i];
+                    } else if (wData.completedGoals && wData.completedGoals.indexOf(i) !== -1) {
+                        pct = 100;
+                    }
+                    if (pct < 70) results.push({ week: w, text: g.text, pct: pct });
+                });
+            }
+            return results.slice(-5);
+        }
+
         function updateDashboard() {
             const today = new Date();
             
@@ -3410,32 +3431,6 @@
             // ── Weekly Progress Chart ──
             renderProgressChart();
 
-    
-        // ── Carry-Forward Goals (based on past performance) ────────────────
-        function getCarryForwardGoals(currentWeek) {
-            const results = [];
-            // Look back up to 4 weeks
-            for (var w = Math.max(8, currentWeek - 4); w < currentWeek; w++) {
-                const wInfo = trainingData[w];
-                const wData = appData.weekData && appData.weekData[w];
-                if (!wInfo || !wData) continue;
-                if (appData.completedWeeks.indexOf(w) !== -1) continue; // fully done
-                wInfo.goals.forEach(function(g, i) {
-                    let pct = 0;
-                    if (wData.goalProgress && wData.goalProgress[i] !== undefined) {
-                        pct = wData.goalProgress[i];
-                    } else if (wData.completedGoals && wData.completedGoals.indexOf(i) !== -1) {
-                        pct = 100;
-                    }
-                    // Only include goals below 70% completion
-                    if (pct < 70) {
-                        results.push({ week: w, text: g.text, pct: pct });
-                    }
-                });
-            }
-            // Limit to 5 most recent carry-forwards to avoid clutter
-            return results.slice(-5);
-        }
         // ── 4-Week Grade Blocks ──
             renderGradeBlocks();
             renderFeedingGuide();
