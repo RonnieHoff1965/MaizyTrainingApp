@@ -1131,6 +1131,11 @@
         }
         .grade-block:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .grade-block.complete-block { border-color: #5C6D4C; background: #f4f8ee; }
+        .grade-block.future-block { opacity: 0.42; background: #f5f5f5; border-color: #ddd; cursor: default; pointer-events: none; }
+        .grade-block.future-block:hover { box-shadow: none; }
+        .grade-block .gb-grade.LOCKED { color: #c8cdd2; font-size: 22px; }
+        .grade-block .gb-bar.LOCKED { background: #dee2e6; }
+        .grade-block .gb-pct.future-label { color: #aaa; font-style: italic; }
         .grade-block .gb-grade {
             font-size: 38px;
             font-weight: 900;
@@ -3353,6 +3358,17 @@
 
 
         // ── Report Card ────────────────────────────────────────────────────
+        // ── Week Arrival Check ────────────────────────────────────────────
+        function weekHasArrived(weekNum) {
+            // A week "arrives" when Maizy is at least weekNum weeks old
+            const arrivalDate = new Date(BIRTHDAY.getTime() + weekNum * 7 * 24 * 60 * 60 * 1000);
+            return new Date() >= arrivalDate;
+        }
+        function weekArrivalDateStr(weekNum) {
+            const d = new Date(BIRTHDAY.getTime() + weekNum * 7 * 24 * 60 * 60 * 1000);
+            return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
         function calcGrade(pct) {
             if (pct === null) return { letter: '—', cls: 'NA' };
             if (pct >= 90) return { letter: 'A', cls: 'A' };
@@ -3363,6 +3379,30 @@
         }
 
         function showReportCard(week) {
+            // If the week hasn't arrived yet, show a locked/future state
+            if (!weekHasArrived(week)) {
+                const availDate = weekArrivalDateStr(week);
+                const wInfo = trainingData[week];
+                document.getElementById('rcCard').innerHTML =
+                    '<div class="rc-header">' +
+                        '<h2>🔒 Week ' + week + ' Report Card</h2>' +
+                        '<div class="rc-subtitle">' + (wInfo ? wInfo.phase + ' · ' + wInfo.age : '') + '</div>' +
+                    '</div>' +
+                    '<div style="text-align:center;padding:40px 20px;">' +
+                        '<div style="font-size:64px;margin-bottom:16px;">🔒</div>' +
+                        '<div style="font-size:20px;font-weight:bold;color:#555;margin-bottom:8px;">Not Yet Available</div>' +
+                        '<div style="font-size:15px;color:#888;">This training week begins on</div>' +
+                        '<div style="font-size:18px;font-weight:bold;color:#3d5a80;margin:10px 0;">' + availDate + '</div>' +
+                        '<div style="font-size:13px;color:#aaa;margin-top:8px;">Check back when Maizy reaches this age!</div>' +
+                    '</div>' +
+                    '<div class="rc-footer">' +
+                        '<button class="rc-btn rc-btn-close" onclick="closeReportCard()">✕ Close</button>' +
+                    '</div>';
+                document.getElementById('rcOverlay').classList.add('open');
+                document.body.style.overflow = 'hidden';
+                return;
+            }
+
             const wInfo   = trainingData[week];
             const wData   = (appData.weekData && appData.weekData[week]) || {};
             const logs    = wData.dailyLogs || [];
@@ -3510,9 +3550,25 @@
             if (!container || !appData) return;
             let html = '';
             trainingPhases.forEach(function(phase) {
+                const firstWeek = phase.weeks[0];
+                const weekRange = 'Weeks ' + firstWeek + '–' + phase.weeks[phase.weeks.length-1];
+
+                // If the phase hasn't started yet (first week not arrived), show locked/future state
+                if (!weekHasArrived(firstWeek)) {
+                    const availDate = weekArrivalDateStr(firstWeek);
+                    html += '<div class="grade-block future-block" title="Available ' + availDate + '">';
+                    html += '<div class="gb-grade LOCKED">🔒</div>';
+                    html += '<div class="gb-info">';
+                    html += '<div class="gb-title">' + phase.label + '</div>';
+                    html += '<div class="gb-weeks">' + weekRange + '</div>';
+                    html += '<div class="gb-bar-wrap"><div class="gb-bar LOCKED" style="width:0%"></div></div>';
+                    html += '<div class="gb-pct future-label">Available ' + availDate + '</div>';
+                    html += '</div></div>';
+                    return;
+                }
+
                 const pct = calcBlockGrade(phase.weeks);
                 const g = pct === null ? { letter: '—', cls: 'NA' } : calcGrade(pct);
-                const weekRange = 'Weeks ' + phase.weeks[0] + '–' + phase.weeks[phase.weeks.length-1];
                 const anyData = phase.weeks.some(function(w) {
                     return appData.completedWeeks.indexOf(w) !== -1 ||
                            (appData.weekData && appData.weekData[w] &&
@@ -3521,8 +3577,7 @@
                 });
                 const blockClass = anyData ? 'grade-block complete-block' : 'grade-block';
                 const barWidth = pct !== null ? pct : 0;
-                // Click to open report card for first week in phase with data, or first week
-                const clickWeek = phase.weeks.find(function(w){ return appData.completedWeeks.indexOf(w)!==-1 || (appData.weekData&&appData.weekData[w]); }) || phase.weeks[0];
+                const clickWeek = phase.weeks.find(function(w){ return appData.completedWeeks.indexOf(w)!==-1 || (appData.weekData&&appData.weekData[w]); }) || firstWeek;
                 html += '<div class="' + blockClass + '" onclick="showReportCard(' + clickWeek + ')" title="Click to see report card">';
                 html += '<div class="gb-grade ' + g.cls + '">' + g.letter + '</div>';
                 html += '<div class="gb-info">';

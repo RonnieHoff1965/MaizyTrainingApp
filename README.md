@@ -18,7 +18,7 @@ A complete hunting dog training schedule app for **Maple Run's Marsh Maiden** �
 - **🔥 Training Streak Counter** — consecutive days logged
 - **🎯 Next Milestone Countdown** — days until next critical training event
 - **📊 Weekly Progress Bar Chart** — visual completion across all 41 weeks
-- **📋 Training Report Cards** — 10 phase grade blocks (A–F) with progress bars
+- **📋 Training Report Cards** — 10 phase grade blocks (A–F) with progress bars; future phases show 🔒 locked with available date
   - Foundation · Early Obedience · Retrieving Basics · Bird & Water Work
   - Advanced Field · Retrieve Mastery · Desire Training · E-Collar & Marks
   - Started Level Prep · Hunt Test Ready
