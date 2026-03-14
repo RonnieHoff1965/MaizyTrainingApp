@@ -3129,6 +3129,7 @@
                 const btn = document.createElement('button');
                 btn.className = 'week-btn';
                 btn.textContent = 'Week ' + week;
+                btn.setAttribute('data-week', week);
                 
                 if (appData.completedWeeks.indexOf(parseInt(week)) !== -1) {
                     btn.classList.add('completed');
@@ -3137,12 +3138,15 @@
                     btn.classList.add('active');
                 }
                 
-                btn.addEventListener('click', function() {
-                    selectWeek(parseInt(week));
-                });
-                
                 container.appendChild(btn);
             });
+
+            // Use event delegation on the container — more reliable on mobile
+            container.onclick = null;
+            container.onclick = function(e) {
+                const btn = e.target.closest('[data-week]');
+                if (btn) selectWeek(parseInt(btn.getAttribute('data-week')));
+            };
         }
 
         function selectWeek(week) {
@@ -3151,6 +3155,9 @@
             initWeekButtons();
             renderWeekContent(week);
             updateDashboard();
+            // Scroll week content into view on mobile
+            var wc = document.getElementById('weekContent');
+            if (wc) wc.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function renderWeekContent(week) {
