@@ -1280,6 +1280,67 @@
         .rc-btn-close { background: #dee2e6; color: #333; }
         .rc-notes { font-size: 13px; color: #444; white-space: pre-wrap; font-style: italic; }
         .rc-photo { max-width: 100%; border-radius: 8px; margin-top: 6px; }
+        /* History photo styles */
+        .history-photo {
+            max-width: 100%;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 8px;
+            cursor: pointer;
+            display: block;
+            object-fit: cover;
+            max-height: 260px;
+            transition: opacity 0.15s;
+        }
+        .history-photo:active { opacity: 0.8; }
+        .photo-thumb { max-width: 100%; border-radius: 8px; margin-top: 6px; }
+        /* Photo lightbox */
+        #photoLightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        #photoLightbox.open { display: flex; }
+        #photoLightbox img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 10px;
+            object-fit: contain;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.5);
+        }
+        #photoLightboxClose {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #photoLightboxCaption {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
         @media print {
             .rc-overlay { display: block !important; position: static; background: none; padding: 0; }
             .rc-btn-print, .rc-btn-close { display: none; }
@@ -3406,6 +3467,24 @@
             return results.slice(-5);
         }
 
+        // ── Photo Lightbox ──────────────────────────────────────────────
+        function openPhotoLightbox(src, caption) {
+            var lb = document.getElementById('photoLightbox');
+            var img = document.getElementById('photoLightboxImg');
+            var cap = document.getElementById('photoLightboxCaption');
+            if (!lb || !img) return;
+            img.src = src;
+            if (cap) cap.textContent = caption || '';
+            lb.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePhotoLightbox() {
+            var lb = document.getElementById('photoLightbox');
+            if (lb) lb.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
         // ── Week-End Progress Report Prompt ──────────────────────────────
         function checkWeekEndPrompt() {
             if (!appData) return;
@@ -4450,10 +4529,20 @@
                     html += '<div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">';
                     html += '<strong style="font-size: 14px; color: #5C6D4C;">📅 Daily Logs:</strong>';
                     data.dailyLogs.sort(function(a, b) { return new Date(b.date) - new Date(a.date); }).forEach(function(log) {
-                        const logDate = new Date(log.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                        html += '<div style="margin: 8px 0; padding: 8px; background: #E8F0DC; border-radius: 4px; border-left: 3px solid #6B7A5A;">';
+                        const logDate = new Date(log.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        var meta = [];
+                        if (log.weather) meta.push(log.weather);
+                        if (log.temp)    meta.push(log.temp + '°F');
+                        if (log.duration) meta.push('⏱️ ' + log.duration);
+                        html += '<div style="margin: 8px 0; padding: 10px 12px; background: #E8F0DC; border-radius: 8px; border-left: 3px solid #6B7A5A;">';
                         html += '<div style="font-size: 13px; font-weight: bold; color: #5C6D4C; margin-bottom: 3px;">' + logDate + '</div>';
-                        html += '<div style="font-size: 13px; white-space: pre-wrap; color: #555;">' + log.entry.substring(0, 150) + (log.entry.length > 150 ? '...' : '') + '</div>';
+                        if (meta.length) html += '<div style="font-size: 12px; color: #7a8c6a; margin-bottom: 5px;">' + meta.join(' · ') + '</div>';
+                        if (log.entry) html += '<div style="font-size: 13px; white-space: pre-wrap; color: #555; margin-bottom: ' + (log.photo ? '8px' : '0') + ';">' + log.entry + '</div>';
+                        if (log.photo) {
+                            var captionText = 'Week ' + week + ' — ' + logDate;
+                            html += '<img src="' + log.photo + '" class="history-photo" onclick="openPhotoLightbox(this.src,' + "'" + captionText + "'" + ')" title="Tap to expand">';
+                            html += '<div style="font-size:11px;color:#7a8c6a;margin-top:3px;text-align:center;">📷 Tap photo to expand</div>';
+                        }
                         html += '</div>';
                     });
                     html += '</div>';
@@ -4717,6 +4806,13 @@
             }
         });
     </script>
+
+    <!-- Photo Lightbox -->
+    <div id="photoLightbox" onclick="closePhotoLightbox()">
+        <button id="photoLightboxClose" onclick="closePhotoLightbox()">✕</button>
+        <img id="photoLightboxImg" src="" alt="Training photo">
+        <div id="photoLightboxCaption"></div>
+    </div>
 
     <!-- Week-End Progress Report Prompt -->
     <div id="weekEndPromptOverlay">
