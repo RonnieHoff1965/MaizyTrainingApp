@@ -71,6 +71,17 @@ All training follows **Stonnie Dennis's desire-based method**:
 | Authentication | Supabase Auth (email + password) |
 | Database | Supabase (`training_data` table, jsonb) |
 | Offline | localStorage cache + fallback |
+| PWA | manifest.json + service-ready icons (installable on iOS/Android) |
+
+---
+
+## Install as App (iPhone / iPad)
+
+1. Open the live URL in **Safari**
+2. Tap the **Share** button → **Add to Home Screen**
+3. Tap **Add** — Maizy Training App appears with the custom icon
+
+The app runs full-screen with no browser chrome, just like a native app.
 
 ---
 
