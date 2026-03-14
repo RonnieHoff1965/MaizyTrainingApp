@@ -1150,6 +1150,65 @@
         .goal-progress-select.sel-0   { border-color:#ccc;    background-color:#f4f4f4; color:#888;   }
 
 
+        /* ── Week-End Progress Report Prompt ── */
+        #weekEndPromptOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #weekEndPromptOverlay.open { display: flex; }
+        .wep-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px 24px 22px;
+            max-width: 360px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+            text-align: center;
+            animation: slideUp 0.25s ease;
+        }
+        .wep-icon { font-size: 52px; margin-bottom: 10px; }
+        .wep-title { font-size: 20px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; }
+        .wep-sub { font-size: 14px; color: #666; margin-bottom: 22px; line-height: 1.5; }
+        .wep-btn-fill {
+            display: block; width: 100%; padding: 13px;
+            background: linear-gradient(135deg, #2c3e50, #3d5a80);
+            color: white; border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 700; cursor: pointer;
+            margin-bottom: 10px; letter-spacing: 0.3px;
+        }
+        .wep-btn-later {
+            display: block; width: 100%; padding: 10px;
+            background: none; color: #999; border: none;
+            font-size: 13px; cursor: pointer;
+        }
+        .wep-days-badge {
+            display: inline-block; background: #e74c3c; color: white;
+            border-radius: 20px; padding: 3px 12px; font-size: 13px;
+            font-weight: 700; margin-bottom: 14px;
+        }
+        /* Dashboard end-of-week reminder banner */
+        #weekEndBanner {
+            display: none;
+            background: linear-gradient(135deg, #2c3e50, #3d5a80);
+            color: white;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        #weekEndBanner.show { display: flex; }
+        #weekEndBanner .web-text { flex: 1; font-size: 14px; font-weight: 600; }
+        #weekEndBanner .web-btn { background: white; color: #2c3e50; border: none;
+            border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
         /* ── Report Card Modal ── */
         .rc-overlay {
             display: none;
@@ -1465,6 +1524,13 @@
                 <div id="streakBanner" class="streak-banner">
                     <span class="streak-emoji">🔥</span>
                     <span id="streakText">0 Day Streak — log a session to start!</span>
+                </div>
+
+                <!-- Week-End Reminder Banner -->
+                <div id="weekEndBanner">
+                    <span style="font-size:20px;">📋</span>
+                    <span class="web-text" id="weekEndBannerText">Week ending — fill out your progress report!</span>
+                    <button class="web-btn" onclick="openWeekEndPrompt()">Open Now</button>
                 </div>
 
                 <!-- Next Milestone Countdown -->
@@ -3316,6 +3382,7 @@
             initWeekButtons();
             renderMilestones();
             renderWeekContent(appData.currentWeek);
+            checkWeekEndPrompt();
         }
 
         // ── Carry-Forward Goals (based on past performance) ────────────────
@@ -3337,6 +3404,83 @@
                 });
             }
             return results.slice(-5);
+        }
+
+        // ── Week-End Progress Report Prompt ──────────────────────────────
+        function checkWeekEndPrompt() {
+            if (!appData) return;
+            var currentWeek = appData.currentWeek;
+            var banner = document.getElementById('weekEndBanner');
+            var bannerText = document.getElementById('weekEndBannerText');
+
+            // Only show if the week has actually started
+            if (!weekHasArrived(currentWeek)) {
+                if (banner) banner.classList.remove('show');
+                return;
+            }
+
+            // Days into the current training week
+            var weekStartDate = new Date(BIRTHDAY.getTime() + currentWeek * 7 * 24 * 60 * 60 * 1000);
+            var today = new Date();
+            var daysIntoWeek = Math.floor((today - weekStartDate) / (1000 * 60 * 60 * 24));
+
+            // Show on days 5 and 6 (last 2 days of a 7-day week, 0-indexed)
+            var isWeekEnding = daysIntoWeek >= 5 && daysIntoWeek <= 6;
+            var daysLeft = 6 - daysIntoWeek; // 1 = second-to-last, 0 = last day
+
+            // Don't show if week already completed
+            var isCompleted = appData.completedWeeks.indexOf(currentWeek) !== -1;
+
+            // Don't show if user dismissed the modal this session
+            var dismissKey = 'maizy_wep_dismissed_w' + currentWeek;
+            var isDismissed = sessionStorage.getItem(dismissKey) === 'true';
+
+            if (isWeekEnding && !isCompleted) {
+                var dayLabel = daysLeft === 0 ? 'Last day of week!' : daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' left in week';
+                // Show dashboard banner always (not dismissable)
+                if (banner && bannerText) {
+                    bannerText.textContent = 'Week ' + currentWeek + ' — ' + dayLabel + ' Fill out your progress report.';
+                    banner.classList.add('show');
+                }
+                // Show modal once per session
+                if (!isDismissed) {
+                    openWeekEndPrompt();
+                }
+            } else {
+                if (banner) banner.classList.remove('show');
+            }
+        }
+
+        function openWeekEndPrompt() {
+            if (!appData) return;
+            var currentWeek = appData.currentWeek;
+            var weekStartDate = new Date(BIRTHDAY.getTime() + currentWeek * 7 * 24 * 60 * 60 * 1000);
+            var daysIntoWeek = Math.floor((new Date() - weekStartDate) / (1000 * 60 * 60 * 24));
+            var daysLeft = 6 - daysIntoWeek;
+            var badge = document.getElementById('wepDaysBadge');
+            var weekNum = document.getElementById('wepWeekNum');
+            if (badge) badge.textContent = daysLeft === 0 ? 'Last Day of Week!' : daysLeft + ' Day' + (daysLeft === 1 ? '' : 's') + ' Left';
+            if (weekNum) weekNum.textContent = currentWeek;
+            var overlay = document.getElementById('weekEndPromptOverlay');
+            if (overlay) {
+                overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeWeekEndPrompt(openReportCard) {
+            var overlay = document.getElementById('weekEndPromptOverlay');
+            if (overlay) {
+                overlay.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+            // Mark dismissed for this session so it doesn't re-open on every tab switch
+            if (appData) {
+                sessionStorage.setItem('maizy_wep_dismissed_w' + appData.currentWeek, 'true');
+            }
+            if (openReportCard && appData) {
+                showReportCard(appData.currentWeek);
+            }
         }
 
         function updateDashboard() {
@@ -4346,6 +4490,7 @@
             
             if (viewName === 'training') {
                 renderWeekContent(appData.currentWeek);
+                checkWeekEndPrompt();
             } else if (viewName === 'history') {
                 renderHistory();
             }
@@ -4572,6 +4717,18 @@
             }
         });
     </script>
+
+    <!-- Week-End Progress Report Prompt -->
+    <div id="weekEndPromptOverlay">
+        <div class="wep-card">
+            <div class="wep-icon">📋</div>
+            <div class="wep-title">Progress Report Time!</div>
+            <div id="wepDaysBadge" class="wep-days-badge">Last Day</div>
+            <div class="wep-sub" id="wepSubText">Week <span id="wepWeekNum"></span> is wrapping up. Take a moment to fill out your progress report card before the new week begins.</div>
+            <button class="wep-btn-fill" onclick="closeWeekEndPrompt(true)">📋 Fill Out Report Card Now</button>
+            <button class="wep-btn-later" onclick="closeWeekEndPrompt(false)">Remind me later</button>
+        </div>
+    </div>
 
     <!-- Weekly Report Card Modal -->
     <div class="rc-overlay" id="rcOverlay" onclick="if(event.target===this)closeReportCard()">
