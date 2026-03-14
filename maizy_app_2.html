@@ -2956,10 +2956,14 @@
         function saveData(data) {
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
             if (currentUser) {
-                db.from('training_data').upsert(
-                    { user_id: currentUser.id, data: data, updated_at: new Date().toISOString() },
-                    { onConflict: 'user_id' }
-                ).catch(function(e) { console.log('Cloud save failed', e); });
+                (async function() {
+                    try {
+                        await db.from('training_data').upsert(
+                            { user_id: currentUser.id, data: data, updated_at: new Date().toISOString() },
+                            { onConflict: 'user_id' }
+                        );
+                    } catch(e) { console.log('Cloud save failed', e); }
+                })();
             }
         }
 
