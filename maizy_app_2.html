@@ -4457,22 +4457,23 @@
                 html += '</div>';
             }
 
-             // ── Detailed feeding card ──────────────────────────────────────
-             var actualTreatDay  = feed.dailyNum * 0.5 * data.weekTreatPct;
-             var actualMeal      = feed.dailyNum - actualTreatDay;
-             var treatPctLabel   = Math.round(data.weekTreatPct * 100);
-             var mealLabel       = actualTreatDay > 0 ? 'Single Meal (daily − treats)' : 'Full Daily Meal';
-             html += '<div class="feed-card">'
-                 + '<div class="feed-card-title">🥖 Daily Food Allotment — Week ' + week + '</div>'
-                 + '<div class="feed-row"><span>📦 Total Daily Ration</span><strong>' + feed.daily + ' cups/day</strong></div>'
-                 + '<div class="feed-row"><span>🍴 ' + mealLabel + '</span><strong>' + cupsToStr(actualMeal) + ' cups — 1×/day</strong></div>'
-                 + (actualTreatDay > 0
-                     ? '<div class="feed-row"><span>🎯 Training Treats (' + feed.daily + ' × 50% × ' + treatPctLabel + '%)</span><strong>' + cupsToStr(actualTreatDay) + ' cups/day</strong></div>'
-                     : '<div class="feed-row"><span>🚫 No Food Treats This Phase</span><strong>0 cups</strong></div>')
-                 + (actualTreatDay > 0
-                     ? '<div style="font-size:11px;color:#7A9B5C;margin-top:8px;">Treats = kibble from daily ration. Formula: daily × 50% × ' + treatPctLabel + '%. Verify with your kibble brand\'s chart.</div>'
-                     : '<div style="font-size:11px;color:#7A9B5C;margin-top:8px;">All kibble fed as one daily meal. Verify with your kibble brand\'s chart.</div>')
-                 + '</div>';
+            // ── Detailed feeding card ─────────────────────────────────────
+            var fcTreat = feed.dailyNum * 0.5 * data.weekTreatPct;
+            var fcMeal  = feed.dailyNum - fcTreat;
+            var fcPct   = Math.round(data.weekTreatPct * 100);
+            html += '<div class="feed-card">';
+            html += '<div class="feed-card-title">🍖 Daily Food Allotment — Week ' + week + '</div>';
+            html += '<div class="feed-row"><span>📦 Total Daily Ration</span><strong>' + feed.daily + ' cups/day</strong></div>';
+            if (fcTreat > 0) {
+                html += '<div class="feed-row"><span>🍽️ Single Meal (daily − treats)</span><strong>' + cupsToStr(fcMeal) + ' cups — 1×/day</strong></div>';
+                html += '<div class="feed-row"><span>🎯 Training Treats (' + feed.daily + ' × 50% × ' + fcPct + '%)</span><strong>' + cupsToStr(fcTreat) + ' cups/day</strong></div>';
+                html += '<div style="font-size:11px;color:#7A9B5C;margin-top:8px;">Treats = kibble from daily ration. Formula: ' + feed.daily + ' cups × 50% × ' + fcPct + '%.</div>';
+            } else {
+                html += '<div class="feed-row"><span>🍽️ Full Daily Meal</span><strong>' + cupsToStr(fcMeal) + ' cups — 1×/day</strong></div>';
+                html += '<div class="feed-row"><span>🚫 No Food Treats This Phase</span><strong>0 cups</strong></div>';
+                html += '<div style="font-size:11px;color:#7A9B5C;margin-top:8px;">All kibble fed as one daily meal. No food treats this phase.</div>';
+            }
+            html += '</div>';
 
 
             // Stonnie Dennis Techniques Section
