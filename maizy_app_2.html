@@ -4434,11 +4434,9 @@
             
             const weekData = appData.weekData[week] || { completedGoals: [], notes: '' };
             
-            const treatStyle = data.treatLevel === 'high'
-                ? 'background:#c47d10;color:#fff;font-weight:700;'
-                : data.treatLevel === 'none'
-                    ? 'background:#5C6D4C;color:#fff;font-weight:700;'
-                    : 'background:#7D8B6B;color:#fff;font-weight:700;';
+            const treatStyle = data.treatLevel === 'none'
+                ? 'background:#5C6D4C;color:#fff;font-weight:700;'
+                : 'background:#c47d10;color:#fff;font-weight:700;';
 
             // Get feeding info early so we can show it in the header
             const feed = getFeedingInfo(week);
@@ -4447,7 +4445,7 @@
                 + '<div class="training-meta">'
                 + '<span>' + data.age + '</span>'
                 + '<span class="treat-badge" style="' + treatStyle + '">' + data.treatText + '</span>'
-                + (data.weekTreatPct > 0 ? '<span class="treat-badge" style="background:#4a7c59;color:#fff;font-weight:700;">🍖 ' + cupsToStr(feed.dailyNum * 0.5 * data.weekTreatPct) + ' cups/day treats</span>' : '<span class="treat-badge treat-none">🚫 No Food Treats</span>')
+                + (data.weekTreatPct > 0 ? '<span class="treat-badge" style="background:#c47d10;color:#fff;font-weight:700;">🍖 ' + cupsToStr(feed.dailyNum * 0.5 * data.weekTreatPct) + ' cups/day treats</span>' : '<span class="treat-badge treat-none">🚫 No Food Treats</span>')
                 + '</div></div>';
             
             if (appData.completedWeeks.indexOf(week) !== -1) {
