@@ -4038,7 +4038,8 @@
                     logsHtml += '<div class="rc-log-item">';
                     logsHtml += '<div class="rc-log-date">' + d + '</div>';
                     if (meta.length) logsHtml += '<div class="rc-log-meta">' + meta.join(' · ') + '</div>';
-                    if (log.photo) logsHtml += '<img src="' + log.photo + '" class="rc-photo">';
+                    var rcPhotos = log.photos && log.photos.length ? log.photos : (log.photo ? [log.photo] : []);
+                    rcPhotos.forEach(function(src){ logsHtml += '<img src="' + src + '" class="rc-photo" style="margin-right:4px;">'; });
                     logsHtml += '<div class="rc-log-text">' + (log.entry || '') + '</div>';
                     logsHtml += '</div>';
                 });
@@ -4280,28 +4281,53 @@
         }
 
         // ── Photo Handler ──────────────────────────────────────────────────
-        window._pendingPhoto = '';
+        window._pendingPhotos = [];
         function handlePhotoSelect(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const maxW = 400, maxH = 400;
-                    let w = img.width, h = img.height;
-                    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
-                    if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
-                    const canvas = document.createElement('canvas');
-                    canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    window._pendingPhoto = canvas.toDataURL('image/jpeg', 0.5);
-                    const preview = document.getElementById('logPhotoPreview');
-                    if (preview) { preview.src = window._pendingPhoto; preview.style.display = 'block'; }
+            const files = Array.from(input.files);
+            if (!files.length) return;
+            files.forEach(function(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const maxW = 800, maxH = 800;
+                        let w = img.width, h = img.height;
+                        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+                        if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                        window._pendingPhotos.push(dataUrl);
+                        renderPhotoPreviewGrid();
+                    };
+                    img.src = e.target.result;
                 };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+                reader.readAsDataURL(file);
+            });
+            // Reset so same files can be re-selected
+            input.value = '';
+        }
+
+        function renderPhotoPreviewGrid() {
+            var grid = document.getElementById('logPhotoPreviewGrid');
+            if (!grid) return;
+            if (!window._pendingPhotos.length) { grid.innerHTML = ''; return; }
+            var html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">';
+            window._pendingPhotos.forEach(function(src, idx) {
+                html += '<div style="position:relative;display:inline-block;">';
+                html += '<img src="' + src + '" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:2px solid #c8d8b0;">';
+                html += '<button onclick="removePendingPhoto(' + idx + ')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#c0392b;color:white;border:none;cursor:pointer;font-size:11px;line-height:18px;text-align:center;padding:0;">✕</button>';
+                html += '</div>';
+            });
+            html += '</div>';
+            html += '<div style="font-size:11px;color:#7a8c6a;margin-top:4px;">' + window._pendingPhotos.length + ' photo' + (window._pendingPhotos.length > 1 ? 's' : '') + ' selected</div>';
+            grid.innerHTML = html;
+        }
+
+        function removePendingPhoto(idx) {
+            window._pendingPhotos.splice(idx, 1);
+            renderPhotoPreviewGrid();
         }
 
         function initWeekButtons() {
@@ -4474,10 +4500,10 @@
 
             // ── Photo ──
             html += '<div class="photo-section">';
-            html += '<div style="font-size:13px;font-weight:bold;margin-bottom:6px;">📷 Add Photo</div>';
-            html += '<input type="file" id="logPhotoInput" accept="image/*" style="display:none;" onchange="handlePhotoSelect(this)">';
-            html += '<button id="photoChooseBtn" style="padding:7px 14px;border:2px dashed #c8d8b0;border-radius:8px;background:#f8fbf4;cursor:pointer;font-size:13px;">📷 Choose Photo</button>';
-            html += '<img id="logPhotoPreview" class="photo-preview">';
+            html += '<div style="font-size:13px;font-weight:bold;margin-bottom:6px;">📷 Add Photos</div>';
+            html += '<input type="file" id="logPhotoInput" accept="image/*" multiple style="display:none;" onchange="handlePhotoSelect(this)">';
+            html += '<button id="photoChooseBtn" style="padding:7px 14px;border:2px dashed #c8d8b0;border-radius:8px;background:#f8fbf4;cursor:pointer;font-size:13px;">📷 Choose Photos</button>';
+            html += '<div id="logPhotoPreviewGrid"></div>';
             html += '</div>';
 
             // ── Log Textarea ──
@@ -4500,7 +4526,12 @@
                     if (log.duration) meta += '<span style="font-size:12px;color:#888;">⏱️ ' + log.duration + '</span>';
                     html += '<span>' + meta + '</span>';
                     html += '</div>';
-                    if (log.photo) html += '<img src="' + log.photo + '" class="photo-thumb"><br>';
+                    var logPhotos = log.photos && log.photos.length ? log.photos : (log.photo ? [log.photo] : []);
+                    if (logPhotos.length) {
+                        html += '<div style="display:flex;flex-wrap:wrap;gap:5px;margin:4px 0;">';
+                        logPhotos.forEach(function(src){ html += '<img src="' + src + '" style="width:68px;height:68px;object-fit:cover;border-radius:6px;border:1px solid #c8d8b0;">'; });
+                        html += '</div>';
+                    }
                     html += '<div style="white-space: pre-wrap;margin-top:4px;">' + log.entry + '</div>';
                     html += '</div>';
                 });
@@ -4573,7 +4604,7 @@
             const selectedWeather = (document.querySelector('.weather-btn.selected') || {}).getAttribute ? document.querySelector('.weather-btn.selected').getAttribute('data-weather') : '';
             const logTemp = (document.getElementById('logTemp') || {}).value || '';
             const logDuration = window._timerElapsed > 0 ? formatTimer(window._timerElapsed) : '';
-            const logPhoto = window._pendingPhoto || '';
+            const logPhoto = window._pendingPhotos && window._pendingPhotos.length ? window._pendingPhotos.slice() : [];
 
             const weekData = appData.weekData[week] || { completedGoals: [], dailyLogs: [] };
             if (!weekData.dailyLogs) weekData.dailyLogs = [];
@@ -4590,7 +4621,7 @@
             if (selectedWeather) logData.weather = selectedWeather;
             if (logTemp) logData.temp = logTemp;
             if (logDuration) logData.duration = logDuration;
-            if (logPhoto) logData.photo = logPhoto;
+            if (logPhoto.length) logData.photos = logPhoto;
 
             if (existingLogIndex !== -1) {
                 weekData.dailyLogs[existingLogIndex] = logData;
@@ -4603,7 +4634,7 @@
 
             // Reset timer + photo after save
             timerReset();
-            window._pendingPhoto = '';
+            window._pendingPhotos = [];
 
             document.getElementById('dailyLogEntry').value = '';
             renderWeekContent(week);
