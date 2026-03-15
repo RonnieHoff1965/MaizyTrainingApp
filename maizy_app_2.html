@@ -4457,15 +4457,20 @@
                 html += '</div>';
             }
 
-            // ── Detailed feeding card ──────────────────────────────────────
-            html += '<div class="feed-card">'
-                + '<div class="feed-card-title">🍖 Daily Food Allotment — Week ' + week + '</div>'
-                + '<div class="feed-row"><span>📦 Total Daily Ration</span><strong>' + feed.daily + ' cups/day</strong></div>'
-                + '<div class="feed-row"><span>🍽️ Single Meal (½ ration)</span><strong>' + feed.mealPortion + ' cups — 1×/day</strong></div>'
-                + '<div class="feed-row"><span>🎯 Training Treats (½ ration)</span><strong>' + feed.treatDay + ' cups/day</strong></div>'
-                + '<div class="feed-row"><span>📅 Weekly Treat Budget</span><strong>' + feed.treatWeek + ' cups</strong></div>'
-                + '<div style="font-size:11px;color:#7A9B5C;margin-top:8px;">Treats = dry kibble pulled from the daily ration. Verify with your kibble brand\'s chart.</div>'
-                + '</div>';
+             // ── Detailed feeding card ──────────────────────────────────────
+             var actualTreatDay = feed.dailyNum * 0.5 * data.weekTreatPct;
+             var actualTreatWeek = Math.round(actualTreatDay * 7 * 8) / 8;
+             var treatPctLabel = Math.round(data.weekTreatPct * 100);
+             html += '<div class="feed-card">'
+                 + '<div class="feed-card-title">🍖 Daily Food Allotment — Week ' + week + '</div>'
+                 + '<div class="feed-row"><span>📦 Total Daily Ration</span><strong>' + feed.daily + ' cups/day</strong></div>'
+                 + '<div class="feed-row"><span>🍽️ Single Meal (½ ration)</span><strong>' + feed.mealPortion + ' cups — 1×/day</strong></div>'
+                 + (actualTreatDay > 0
+                     ? '<div class="feed-row"><span>🎯 Training Treats (' + feed.daily + ' × 50% × ' + treatPctLabel + '%)</span><strong>' + cupsToStr(actualTreatDay) + ' cups/day</strong></div>'
+                       + '<div class="feed-row"><span>📅 Weekly Treat Budget</span><strong>' + cupsToStr(actualTreatWeek) + ' cups</strong></div>'
+                     : '<div class="feed-row"><span>🚫 No Food Treats This Phase</span><strong>0 cups</strong></div>')
+                 + '<div style="font-size:11px;color:#7A9B5C;margin-top:8px;">Treats = dry kibble from daily ration. Formula: daily × 50% × treat%. Verify with your kibble brand\'s chart.</div>'
+                 + '</div>';
 
             // Stonnie Dennis Techniques Section
             if (data.stonnieTechniques && data.stonnieTechniques.length > 0) {
